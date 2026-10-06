@@ -2,15 +2,22 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { CITIES, MockCity } from "@/lib/mock-data";
+import { supabase } from "@/lib/supabase";
 
 export const DEFAULT_CITY: MockCity =
-  CITIES.find((c) => c.slug.toLowerCase() === "hyderabad" || c.name.toLowerCase() === "hyderabad") || CITIES[3] || CITIES[0];
+  CITIES.find((c) => c.slug.toLowerCase() === "vellore" || c.name.toLowerCase() === "vellore") || {
+    id: "city-9",
+    name: "Vellore",
+    state: "Tamil Nadu",
+    slug: "vellore",
+  };
 
 interface CityContextType {
   selectedCity: MockCity;
   setCity: (city: MockCity | string) => void;
   setSelectedCity: (city: MockCity) => void;
   cities: MockCity[];
+  isLoadingCities: boolean;
 }
 
 const CityContext = createContext<CityContextType>({
@@ -18,12 +25,38 @@ const CityContext = createContext<CityContextType>({
   setCity: () => {},
   setSelectedCity: () => {},
   cities: CITIES,
+  isLoadingCities: false,
 });
 
 export function CityProvider({ children }: { children: ReactNode }) {
   const [selectedCity, setSelectedCityState] = useState<MockCity>(DEFAULT_CITY);
+  const [citiesList, setCitiesList] = useState<MockCity[]>(CITIES);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
 
-  // Initialize from URL search param or localStorage
+  // Fetch live cities from Supabase on mount
+  useEffect(() => {
+    async function loadDbCities() {
+      setIsLoadingCities(true);
+      try {
+        const { data, error } = await supabase
+          .from("cities")
+          .select("id, name, state, slug")
+          .order("name", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          setCitiesList(data);
+        }
+      } catch (err) {
+        console.warn("Using fallback cities list:", err);
+      } finally {
+        setIsLoadingCities(false);
+      }
+    }
+
+    loadDbCities();
+  }, []);
+
+  // Initialize from URL search param or localStorage (defaulting to Vellore)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -31,9 +64,9 @@ export function CityProvider({ children }: { children: ReactNode }) {
       const params = new URLSearchParams(window.location.search);
       const urlCity = params.get("city") || params.get("citySlug");
       const storedCity = localStorage.getItem("selected_city") || localStorage.getItem("mtbs_city");
-      const targetSlug = (urlCity || storedCity || "hyderabad").toLowerCase();
+      const targetSlug = (urlCity || storedCity || "vellore").toLowerCase();
 
-      const found = CITIES.find(
+      const found = citiesList.find(
         (c) => c.slug.toLowerCase() === targetSlug || c.name.toLowerCase() === targetSlug
       ) || DEFAULT_CITY;
 
@@ -43,13 +76,13 @@ export function CityProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.warn("CityContext init error:", e);
     }
-  }, []);
+  }, [citiesList]);
 
   const setCity = useCallback((city: MockCity | string) => {
     let target: MockCity | undefined;
     if (typeof city === "string") {
       const lower = city.toLowerCase();
-      target = CITIES.find((c) => c.slug.toLowerCase() === lower || c.name.toLowerCase() === lower);
+      target = citiesList.find((c) => c.slug.toLowerCase() === lower || c.name.toLowerCase() === lower);
     } else {
       target = city;
     }
@@ -65,14 +98,22 @@ export function CityProvider({ children }: { children: ReactNode }) {
         console.warn("Error saving city to localStorage:", e);
       }
     }
-  }, []);
+  }, [citiesList]);
 
   const setSelectedCity = useCallback((city: MockCity) => {
     setCity(city);
   }, [setCity]);
 
   return (
-    <CityContext.Provider value={{ selectedCity, setCity, setSelectedCity, cities: CITIES }}>
+    <CityContext.Provider
+      value={{
+        selectedCity,
+        setCity,
+        setSelectedCity,
+        cities: citiesList,
+        isLoadingCities,
+      }}
+    >
       {children}
     </CityContext.Provider>
   );

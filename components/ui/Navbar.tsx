@@ -23,7 +23,7 @@ export function Navbar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { selectedCity, setCity } = useCity();
+  const { selectedCity, setCity, cities } = useCity();
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [citySearchQuery, setCitySearchQuery] = useState("");
 
@@ -78,7 +78,7 @@ export function Navbar() {
       ].filter((c) => c.toLowerCase().includes(globalSearch.toLowerCase()))
     : [];
 
-  const filteredCities = CITIES.filter(
+  const filteredCities = (cities || []).filter(
     (c) =>
       c.name.toLowerCase().includes(citySearchQuery.toLowerCase()) ||
       c.state.toLowerCase().includes(citySearchQuery.toLowerCase())
