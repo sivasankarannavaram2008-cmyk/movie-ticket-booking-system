@@ -493,20 +493,143 @@ async function seed() {
   console.log(`   ✅ Confirmed total active screens across all cities: ${allActiveScreens.length}`);
 
   // --------------------------------------------------------------------------
-  // 3. Movies Catalog Verification & Even Distribution Setup (2025-2026 Telugu Releases)
+  // 3. Movies Catalog Verification & Even Distribution Setup (Telugu Blockbusters + 2025-2026 Releases)
   // --------------------------------------------------------------------------
-  console.log("\n🎞️  [3/5] Syncing 2025-2026 Telugu Movie Catalog in Database...");
+  console.log("\n🎞️  [3/5] Syncing Full Telugu Movie Catalog (22 Titles) with Authentic CDN Artwork...");
 
-  const teluguMovies2025_2026 = [
+  const teluguCatalog = [
+    // --- Classic & Blockbuster Catalog (12 Titles) ---
+    {
+      title: "Baahubali: The Beginning",
+      genre: ["Action", "Drama", "Fantasy"],
+      duration_min: 159,
+      censor: "U/A",
+      langs: ["Telugu", "Tamil", "Hindi", "Malayalam"],
+      release_date: "2015-07-10",
+      poster_url: "https://image.tmdb.org/t/p/w780/pU1ULUq8D3iRxl1fdX2lZIzdHuI.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/5a7lMDn3nAj2ByO0X1fg6BhUphR.jpg",
+    },
+    {
+      title: "Baahubali 2: The Conclusion",
+      genre: ["Action", "Drama", "Fantasy"],
+      duration_min: 167,
+      censor: "U/A",
+      langs: ["Telugu", "Tamil", "Hindi", "Malayalam"],
+      release_date: "2017-04-28",
+      poster_url: "https://image.tmdb.org/t/p/w780/ltyARDw2EFXZ2H2ERnlEctXPioP.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/a9jZrU7LJk6mAUjmkbEmTiC52l0.jpg",
+    },
+    {
+      title: "Kalki 2898 AD",
+      genre: ["Sci-Fi", "Action", "Fantasy"],
+      duration_min: 181,
+      censor: "U/A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2024-06-27",
+      poster_url: "https://image.tmdb.org/t/p/w780/3HzGtM0JpfH2pWFGugJK22LRP6b.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/eZ239CUp1d6OryZEBPnO2n87gMG.jpg",
+    },
+    {
+      title: "RRR",
+      genre: ["Action", "Drama", "History"],
+      duration_min: 182,
+      censor: "U/A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2022-03-25",
+      poster_url: "https://image.tmdb.org/t/p/w780/tjpiEnZBUAA8pdNPRKa5vP2Zpqw.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/i0Y0wP8H6SRgjr6QmuwbtQbS24D.jpg",
+    },
+    {
+      title: "Salaar: Part 1 - Ceasefire",
+      genre: ["Action", "Crime", "Drama"],
+      duration_min: 175,
+      censor: "A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2023-12-22",
+      poster_url: "https://image.tmdb.org/t/p/w780/gC5HfzG2xUbqSPaXPdqTiE94c79.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/l57Hoy9prfwpewKm7PEYxOiJeMr.jpg",
+    },
+    {
+      title: "Pushpa: The Rise",
+      genre: ["Action", "Crime", "Drama"],
+      duration_min: 179,
+      censor: "U/A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2021-12-17",
+      poster_url: "http://www.impawards.com/intl/india/2021/posters/pushpa_the_rise__part_one_xlg.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/5a7lMDn3nAj2ByO0X1fg6BhUphR.jpg",
+    },
+    {
+      title: "Pushpa 2: The Rule",
+      genre: ["Action", "Crime", "Drama"],
+      duration_min: 200,
+      censor: "U/A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2024-12-05",
+      poster_url: "http://www.impawards.com/intl/india/2024/posters/pushpa_the_rule__part_two_xlg.jpg",
+      backdrop_url: "https://upload.wikimedia.org/wikipedia/en/1/11/Pushpa_2-_The_Rule.jpg",
+    },
+    {
+      title: "Devara: Part 1",
+      genre: ["Action", "Drama", "Thriller"],
+      duration_min: 178,
+      censor: "U/A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2024-09-27",
+      poster_url: "https://image.tmdb.org/t/p/w780/uByCHJa3eaCL0SgFGDYYLlsVggC.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/uByCHJa3eaCL0SgFGDYYLlsVggC.jpg",
+    },
+    {
+      title: "Hanu-Man",
+      genre: ["Action", "Adventure", "Fantasy"],
+      duration_min: 158,
+      censor: "U/A",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2024-01-12",
+      poster_url: "https://image.tmdb.org/t/p/w780/iZTfOhaSTjBcwgRBm0zfD5gqemJ.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/f3ONMmF8IH85M9ewOSXXPqHECPX.jpg",
+    },
+    {
+      title: "Ala Vaikunthapurramuloo",
+      genre: ["Action", "Comedy", "Drama"],
+      duration_min: 165,
+      censor: "U/A",
+      langs: ["Telugu", "Malayalam"],
+      release_date: "2020-01-12",
+      poster_url: "https://image.tmdb.org/t/p/w780/hxay11Z1TrGU2R39JEUZdAPKdHG.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/3rWjPTE2hXXhMDUgL0T73wiMBHU.jpg",
+    },
+    {
+      title: "Rangasthalam",
+      genre: ["Action", "Drama", "Period"],
+      duration_min: 174,
+      censor: "U/A",
+      langs: ["Telugu"],
+      release_date: "2018-03-30",
+      poster_url: "https://image.tmdb.org/t/p/w780/f4FF18ia7yTvHf2izNrHqBmgH8U.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/isnJGDrfR9dIrHMsPTvHtJaGEpc.jpg",
+    },
+    {
+      title: "Saripodhaa Sanivaaram",
+      genre: ["Action", "Thriller", "Drama"],
+      duration_min: 175,
+      censor: "U/A",
+      langs: ["Telugu", "Tamil", "Hindi", "Malayalam", "Kannada"],
+      release_date: "2024-08-29",
+      poster_url: "https://image.tmdb.org/t/p/w780/gmJ29b6r3zNWA9HEW3V95H2DF7u.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/gmJ29b6r3zNWA9HEW3V95H2DF7u.jpg",
+    },
+
+    // --- 2025–2026 Catalog (10 Titles) ---
     {
       title: "The Paradise",
       genre: ["Action", "Drama", "Thriller"],
       duration_min: 162,
       censor: "U/A",
       langs: ["Telugu", "Tamil", "Hindi", "Malayalam", "Kannada"],
-      release_date: "2026-03-27",
-      poster_url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
+      release_date: "2026-09-24",
+      poster_url: "https://upload.wikimedia.org/wikipedia/en/b/bb/The_Paradise_%282026_Indian_film%29_poster.jpg",
+      backdrop_url: "https://upload.wikimedia.org/wikipedia/en/b/bb/The_Paradise_%282026_Indian_film%29_poster.jpg",
     },
     {
       title: "The RajaSaab",
@@ -515,8 +638,8 @@ async function seed() {
       censor: "U/A",
       langs: ["Telugu", "Tamil", "Hindi", "Malayalam", "Kannada"],
       release_date: "2026-04-10",
-      poster_url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1509281373149-e957c6296406?auto=format&fit=crop&w=1200&q=80",
+      poster_url: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgdPirJn7Ly_QcvIi388z2Lwt0xAE5qu6YtmJVct7BfQIyIm_rWPGVe8LLdNWNGiLMpR9hDmQE4n5PC7zUiRLvQ7IThuRPOYG-U7D8pzGfZV3Hnxgxl35riURBj_uXFsfZl7e8AQAbzy_0uy7RlDCbRhZN-OIHAzQ0gD2eZEOdq_GLwkQ2R7Qx4K-gS0svb/s1468/TheRajaSaab001.png",
+      backdrop_url: "https://wallpaperaccess.com/full/26453064.jpg",
     },
     {
       title: "Vishwambhara",
@@ -525,8 +648,8 @@ async function seed() {
       censor: "U/A",
       langs: ["Telugu", "Hindi", "Tamil", "Kannada", "Malayalam"],
       release_date: "2026-01-10",
-      poster_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=1200&q=80",
+      poster_url: "https://image.tmdb.org/t/p/w780/yJF3pPAg4ipOv9SY2XrcBQFpTSH.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/yJF3pPAg4ipOv9SY2XrcBQFpTSH.jpg",
     },
     {
       title: "Ustaad Bhagat Singh",
@@ -535,48 +658,18 @@ async function seed() {
       censor: "U/A",
       langs: ["Telugu", "Tamil", "Hindi"],
       release_date: "2026-05-01",
-      poster_url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
+      poster_url: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjd7Aq0R8SU4Trrx32NNeXPv8y-cAscqtWvwVTbczxJGQ7PwfARRIqLMvcBrM0eTVMEirL6KlJq-EGWj8zEe2diPHYBU_YMAmz64FurArHGicQrUgIMNKrZZ1tK9XMHU_r_rS8m-cprQiAxBO2XX-NJr0NYvPPTGIZmzlgKkPDQWXtoABM9bEnJqusANmH2/s1500/UBS001.jpg",
+      backdrop_url: "https://gallery.123telugu.com/content/slideshows/2026/3/Ustaad-Bhagat-Singh1/images/Ustaad%20Bhagat%20Singh-001.jpg",
     },
     {
       title: "Goodachari 2 (G2)",
-      genre: ["Action", "Thriller"],
+      genre: ["Action", "Thriller", "Espionage"],
       duration_min: 158,
       censor: "U/A",
       langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
       release_date: "2026-07-17",
-      poster_url: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "Maa Inti Bangaaram",
-      genre: ["Action", "Drama"],
-      duration_min: 145,
-      censor: "U/A",
-      langs: ["Telugu", "Tamil", "Malayalam", "Kannada"],
-      release_date: "2026-06-05",
-      poster_url: "https://images.unsplash.com/photo-1533613220915-609f661a6fe1?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "Peddi",
-      genre: ["Action", "Drama"],
-      duration_min: 155,
-      censor: "U/A",
-      langs: ["Telugu", "Tamil", "Kannada"],
-      release_date: "2026-08-14",
-      poster_url: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "Chennai Love Story",
-      genre: ["Romance", "Drama"],
-      duration_min: 140,
-      censor: "U",
-      langs: ["Telugu", "Tamil"],
-      release_date: "2026-02-14",
-      poster_url: "https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1200&q=80",
+      poster_url: "https://upload.wikimedia.org/wikipedia/en/5/5a/G2_%28film%29_poster.jpeg",
+      backdrop_url: "https://upload.wikimedia.org/wikipedia/en/5/5a/G2_%28film%29_poster.jpeg",
     },
     {
       title: "They Call Him OG",
@@ -585,68 +678,48 @@ async function seed() {
       censor: "A",
       langs: ["Telugu", "Tamil", "Hindi", "Kannada", "Malayalam"],
       release_date: "2025-09-27",
-      poster_url: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1200&q=80",
+      poster_url: "https://image.tmdb.org/t/p/w780/7YTTveWQ3WIQiiPGWsUx05qA5Uq.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/7YTTveWQ3WIQiiPGWsUx05qA5Uq.jpg",
     },
     {
-      title: "Mirai",
-      genre: ["Action", "Fantasy"],
+      title: "Mirai - Super Yodha",
+      genre: ["Action", "Fantasy", "Adventure"],
       duration_min: 152,
       censor: "U/A",
-      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada", "Bengali"],
-      release_date: "2025-08-01",
-      poster_url: "https://images.unsplash.com/photo-1574267432553-4b4628081c31?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=1200&q=80",
+      langs: ["Telugu", "Hindi", "Tamil", "Malayalam", "Kannada"],
+      release_date: "2025-09-12",
+      poster_url: "https://upload.wikimedia.org/wikipedia/en/9/9f/Mirai_%282025_film%29_poster.jpg",
+      backdrop_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
     },
     {
       title: "Hari Hara Veera Mallu",
-      genre: ["Period", "Action"],
+      genre: ["Period", "Action", "Drama"],
       duration_min: 178,
       censor: "U/A",
       langs: ["Telugu", "Tamil", "Hindi", "Malayalam", "Kannada"],
       release_date: "2025-10-31",
-      poster_url: "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
+      poster_url: "https://image.tmdb.org/t/p/w780/1gFSXInMYebLp89V2r0woRFIgZM.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/vg0n59EwKomMNJwlbt1CqlgFDI2.jpg",
     },
     {
-      title: "HIT: The Third Case",
-      genre: ["Crime", "Mystery"],
-      duration_min: 155,
-      censor: "A",
-      langs: ["Telugu", "Tamil", "Hindi", "Malayalam", "Kannada"],
-      release_date: "2025-05-01",
-      poster_url: "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "Mad Square",
-      genre: ["Comedy", "Youth"],
-      duration_min: 138,
-      censor: "U/A",
-      langs: ["Telugu"],
-      release_date: "2025-06-20",
-      poster_url: "https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "Court: State vs A Nobody",
-      genre: ["Legal", "Drama"],
-      duration_min: 142,
-      censor: "U/A",
-      langs: ["Telugu", "Tamil", "Hindi"],
-      release_date: "2025-07-11",
-      poster_url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1200&q=80",
-    },
-    {
-      title: "Kuberaa",
-      genre: ["Crime", "Thriller"],
+      title: "Game Changer",
+      genre: ["Action", "Political", "Drama"],
       duration_min: 165,
       censor: "U/A",
-      langs: ["Telugu", "Tamil", "Hindi", "Malayalam", "Kannada"],
-      release_date: "2025-12-25",
-      poster_url: "https://images.unsplash.com/photo-1509281373149-e957c6296406?auto=format&fit=crop&w=600&q=80",
-      backdrop_url: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&q=80",
+      langs: ["Telugu", "Tamil", "Hindi"],
+      release_date: "2025-01-10",
+      poster_url: "https://image.tmdb.org/t/p/w780/d8Ryb8AunYAuycVKDp5HpdWPKgC.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/zOpe0eHsq0A2NvNyBbtT6sj53qV.jpg",
+    },
+    {
+      title: "Daaku Maharaaj",
+      genre: ["Action", "Drama"],
+      duration_min: 160,
+      censor: "U/A",
+      langs: ["Telugu", "Tamil", "Hindi"],
+      release_date: "2025-01-12",
+      poster_url: "https://image.tmdb.org/t/p/w780/qfalw4Ipiesm1ZF5wTvoKTZlfxW.jpg",
+      backdrop_url: "https://image.tmdb.org/t/p/original/qfalw4Ipiesm1ZF5wTvoKTZlfxW.jpg",
     },
   ];
 
@@ -662,7 +735,7 @@ async function seed() {
 
   const activeMovies: { id: string; title: string }[] = [];
 
-  for (const m of teluguMovies2025_2026) {
+  for (const m of teluguCatalog) {
     const existing = existingByTitle.get(m.title.trim().toLowerCase());
 
     if (existing) {
@@ -706,7 +779,7 @@ async function seed() {
     }
   }
 
-  console.log(`   ✅ Synced 2025-2026 Telugu Movie Catalog (${activeMovies.length} titles):`);
+  console.log(`   ✅ Synced Telugu Movie Catalog (${activeMovies.length} titles):`);
   activeMovies.forEach((m) => console.log(`      - ${m.title}`));
 
   // --------------------------------------------------------------------------
@@ -825,16 +898,35 @@ async function seed() {
     console.log(`   🧹 Pruned expired past shows older than ${days[0]}.`);
   }
 
-  // Fetch existing shows for these days to prevent duplicate collisions
+  // Fetch any existing bookings to preserve shows with active reservations
+  const { data: bookedRows } = await supabase.from("bookings").select("show_id");
+  const bookedShowIds = new Set((bookedRows || []).map((b) => b.show_id));
+
+  // Fetch existing shows for these days
   const { data: existingShows, error: exShowsErr } = await supabase
     .from("shows")
-    .select("screen_id, date, start_time")
+    .select("id, screen_id, date, start_time")
     .in("date", days);
 
   if (exShowsErr) throw new Error(`Failed to fetch existing shows: ${exShowsErr.message}`);
 
+  // Delete unbooked shows for these days so the full 22-movie catalog is scheduled evenly
+  const showsToDelete = (existingShows || [])
+    .filter((s) => !bookedShowIds.has(s.id))
+    .map((s) => s.id);
+
+  if (showsToDelete.length > 0) {
+    console.log(`   🧹 Clearing ${showsToDelete.length} unbooked shows to evenly reschedule 22-movie catalog...`);
+    const delChunks = chunkArray(showsToDelete, 400);
+    for (const dChunk of delChunks) {
+      await supabase.from("shows").delete().in("id", dChunk);
+    }
+  }
+
+  // Any remaining booked shows retain their slot
+  const retainedShows = (existingShows || []).filter((s) => bookedShowIds.has(s.id));
   const existingSlotSet = new Set(
-    (existingShows || []).map((s) => `${s.screen_id}_${s.date}_${s.start_time.slice(0, 5)}`)
+    retainedShows.map((s) => `${s.screen_id}_${s.date}_${s.start_time.slice(0, 5)}`)
   );
 
   const showsToInsert: {
