@@ -259,17 +259,34 @@ export async function POST(req: NextRequest) {
           }
 
           if (validSeatIds.length > 0) {
-            const seatsToInsert = validSeatIds.map((sId: string) => ({
+            const perSeatPrice = validSeatIds.length > 0
+              ? Math.round((Number(totalAmount) / validSeatIds.length) * 100) / 100
+              : Number(totalAmount);
+
+            // Snapshot price strictly scoped per booking into booking_seats.price
+            const seatsToInsertWithPrice = validSeatIds.map((sId: string) => ({
               booking_id: createdBookingId,
               seat_id: sId,
+              price: perSeatPrice,
             }));
 
-            const { error: seatInsertErr } = await supabaseAdmin
+            let seatInsertRes = await supabaseAdmin
               .from("booking_seats")
-              .insert(seatsToInsert);
+              .insert(seatsToInsertWithPrice as any);
 
-            if (seatInsertErr) {
-              console.warn("booking_seats insert notice:", seatInsertErr.message);
+            // If price column is not present on live table, fallback to standard schema
+            if (seatInsertRes.error && seatInsertRes.error.message.includes("price")) {
+              const seatsToInsert = validSeatIds.map((sId: string) => ({
+                booking_id: createdBookingId,
+                seat_id: sId,
+              }));
+              seatInsertRes = await supabaseAdmin
+                .from("booking_seats")
+                .insert(seatsToInsert);
+            }
+
+            if (seatInsertRes.error) {
+              console.warn("booking_seats insert notice:", seatInsertRes.error.message);
             }
           }
         } else if (insertRes.error) {

@@ -589,11 +589,19 @@ function BookingContent() {
           .maybeSingle();
 
         if (newBooking) {
-          const bookingSeats = selectedSeatObjects.map((s) => ({
+          const bookingSeatsWithPrice = selectedSeatObjects.map((s) => ({
             booking_id: newBooking.id,
             seat_id: s.id,
+            price: s.price,
           }));
-          await supabase.from("booking_seats").insert(bookingSeats);
+          const { error: bsErr } = await supabase.from("booking_seats").insert(bookingSeatsWithPrice as any);
+          if (bsErr && bsErr.message.includes("price")) {
+            const bookingSeats = selectedSeatObjects.map((s) => ({
+              booking_id: newBooking.id,
+              seat_id: s.id,
+            }));
+            await supabase.from("booking_seats").insert(bookingSeats);
+          }
         }
       } catch (dbErr) {
         console.warn("Simulated booking insert:", dbErr);

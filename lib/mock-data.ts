@@ -33,6 +33,7 @@ export interface RichMovie {
   rating: number;
   votes: string;
   synopsis: string;
+  description?: string | null;
   isComingSoon?: boolean;
 }
 

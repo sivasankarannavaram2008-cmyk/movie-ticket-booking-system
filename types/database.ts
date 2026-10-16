@@ -105,6 +105,7 @@ export interface Database {
         Row: {
           id: string;
           title: string;
+          description?: string | null;
           poster_url: string | null;
           backdrop_url: string | null;
           genre: string[];
@@ -117,6 +118,7 @@ export interface Database {
         Insert: {
           id?: string;
           title: string;
+          description?: string | null;
           poster_url?: string | null;
           backdrop_url?: string | null;
           genre?: string[];
@@ -129,6 +131,7 @@ export interface Database {
         Update: {
           id?: string;
           title?: string;
+          description?: string | null;
           poster_url?: string | null;
           backdrop_url?: string | null;
           genre?: string[];
@@ -275,18 +278,21 @@ export interface Database {
           id: string;
           booking_id: string;
           seat_id: string;
+          price?: number | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           booking_id: string;
           seat_id: string;
+          price?: number | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           booking_id?: string;
           seat_id?: string;
+          price?: number | null;
           created_at?: string;
         };
         Relationships: [

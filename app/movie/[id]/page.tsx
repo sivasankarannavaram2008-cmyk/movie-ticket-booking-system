@@ -96,10 +96,10 @@ function MovieDetailsContent() {
     async function loadData() {
       setIsLoading(true);
       try {
-        // 1. Fetch movie details
+        // 1. Fetch movie details with description
         const { data: dbMovie, error: movieError } = await supabase
           .from("movies")
-          .select("*")
+          .select("id, title, description, poster_url, backdrop_url, genre, duration_min, release_date, censor_rating, languages")
           .eq("id", movieId)
           .maybeSingle();
 
@@ -108,6 +108,7 @@ function MovieDetailsContent() {
           setMovie({
             id: dbMovie.id,
             title: dbMovie.title,
+            description: dbMovie.description || fallback.description || fallback.synopsis || "",
             poster_url: dbMovie.poster_url ?? null,
             backdrop_url: dbMovie.backdrop_url ?? null,
             genre: dbMovie.genre && dbMovie.genre.length > 0 ? dbMovie.genre : fallback.genre,
@@ -118,12 +119,15 @@ function MovieDetailsContent() {
             formats: fallback.formats,
             rating: fallback.rating,
             votes: fallback.votes,
-            synopsis: "",
+            synopsis: dbMovie.description || fallback.description || fallback.synopsis || "",
           });
         } else {
           // Fallback to rich mock data
           const found = MOCK_MOVIES.find((m) => m.id === movieId) || MOCK_MOVIES[0];
-          setMovie(found);
+          setMovie({
+            ...found,
+            description: found.description || found.synopsis || "",
+          });
         }
 
         // 2. Fetch live showtimes from unified shows API (checks published store & Supabase)
@@ -265,6 +269,13 @@ function MovieDetailsContent() {
                   {movie.languages.join(", ")}
                 </span>
               </div>
+
+              {/* Movie Description */}
+              {(movie.description || movie.synopsis) && (
+                <p className="text-zinc-300 text-sm leading-relaxed max-w-3xl mb-6">
+                  {movie.description || movie.synopsis}
+                </p>
+              )}
 
               {/* Duration, Genre, Release Date */}
               <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-zinc-400">

@@ -104,6 +104,7 @@ function HomeContent() {
             return {
               id: dbMovie.id,
               title: dbMovie.title,
+              description: dbMovie.description || matchedMock.description || matchedMock.synopsis || "",
               poster_url: dbMovie.poster_url ?? null,
               backdrop_url: dbMovie.backdrop_url ?? null,
               genre:
@@ -118,7 +119,7 @@ function HomeContent() {
               formats: matchedMock.formats,
               rating: matchedMock.rating,
               votes: matchedMock.votes,
-              synopsis: "",
+              synopsis: dbMovie.description || matchedMock.description || matchedMock.synopsis || "",
               isComingSoon: matchedMock.isComingSoon || false,
             };
           });

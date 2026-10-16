@@ -141,7 +141,14 @@ export function HeroCarousel({ movies, citySlug: propCitySlug, selectedDate }: H
             <span className="text-zinc-400">{current.languages.join(", ")}</span>
           </div>
 
-          {/* Action Buttons & Format Badges (Synopsis completely removed) */}
+          {/* Movie Description */}
+          {(current.description || current.synopsis) && (
+            <p className="text-zinc-300 text-xs sm:text-sm line-clamp-2 max-w-xl leading-relaxed">
+              {current.description || current.synopsis}
+            </p>
+          )}
+
+          {/* Action Buttons & Format Badges */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link href={bookingHref}>
               <Button
