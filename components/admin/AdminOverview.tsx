@@ -162,7 +162,8 @@ export function AdminOverview({ refreshTrigger }: AdminOverviewProps = {}) {
           const { data: primaryData, error: primaryErr } = await supabase
             .from("bookings")
             .select("*, shows(*, movies(*), cinemas(*)), booking_seats(*)")
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false })
+            .limit(100);
 
           if (!primaryErr && primaryData && primaryData.length > 0) {
             bookings = primaryData;
@@ -188,7 +189,8 @@ export function AdminOverview({ refreshTrigger }: AdminOverviewProps = {}) {
                   seats (*)
                 )
               `)
-              .order("created_at", { ascending: false });
+              .order("created_at", { ascending: false })
+              .limit(100);
 
             if (nestedData && nestedData.length > 0) {
               bookings = nestedData;

@@ -88,7 +88,7 @@ function getInitialSampleBookings(): StoredBooking[] {
 
 export function getBookingStore(): StoredBooking[] {
   if (!global.__globalBookingStore) {
-    global.__globalBookingStore = getInitialSampleBookings();
+    global.__globalBookingStore = [];
   }
   return global.__globalBookingStore;
 }

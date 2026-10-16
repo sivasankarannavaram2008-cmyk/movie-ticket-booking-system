@@ -43,7 +43,9 @@ export async function GET() {
               )
             ),
             booking_seats ( id )
-          `);
+          `)
+          .order("created_at", { ascending: false })
+          .limit(100);
 
         if (!error && data && data.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

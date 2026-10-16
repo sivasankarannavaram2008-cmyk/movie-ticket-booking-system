@@ -39,7 +39,8 @@ export async function GET() {
               seats (row_label, seat_number)
             )
           `)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .limit(100);
 
         if (!error && data && data.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Search, XCircle, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
-import { getSupabaseAdmin } from "@/lib/supabase";
 
 export interface BookingRow {
   id: string;
@@ -22,52 +21,6 @@ export interface BookingRow {
 
 const PAGE_SIZE = 10;
 
-/* ── Mock Bookings for offline / build mode ───────────────── */
-function generateMockBookings(): BookingRow[] {
-  const names = [
-    "Aarav Sharma", "Priya Patel", "Ravi Kumar", "Sneha Reddy", "Vikram Singh",
-    "Anita Desai", "Raj Malhotra", "Divya Nair", "Arjun Mehta", "Kavita Rao",
-    "Siddharth Joshi", "Neha Gupta", "Aditya Verma", "Pooja Iyer", "Karan Chopra",
-  ];
-  const movies = [
-    "Kalki 2898 AD", "Jawan: Extended Cut", "Devara: Part 1",
-    "Stree 2: Sarkate Ka Aatank", "Dune: Part Two", "Pushpa 2: The Rule",
-  ];
-  const cinemas = [
-    "PVR INOX Palladium", "Cinépolis Grand Mall", "Prasads Multiplex",
-    "Sathyam Cinemas SPI", "AMB Cinemas", "INOX Quest Mall",
-  ];
-  const statuses: ("CONFIRMED" | "CANCELLED")[] = ["CONFIRMED", "CONFIRMED", "CONFIRMED", "CONFIRMED", "CANCELLED"];
-  const times = ["10:00 AM", "01:30 PM", "05:15 PM", "09:00 PM", "11:30 PM"];
-
-  return Array.from({ length: 25 }, (_, i) => {
-    const name = names[i % names.length];
-    const hexPart = ((i + 1) * 0xa3f2b + 0x1000).toString(16).toUpperCase().slice(0, 6);
-    const status = statuses[i % statuses.length];
-    const seatCount = 1 + (i % 4);
-    const seatLabels = Array.from({ length: seatCount }, (_, s) => `${String.fromCharCode(65 + (i % 8))}${s + 1}`);
-    const dateObj = new Date();
-    dateObj.setDate(dateObj.getDate() - (i % 3));
-    const dateStr = dateObj.toISOString().split("T")[0];
-
-    return {
-      id: `booking-${i + 1}`,
-      refId: `BMS-2026-${hexPart}`,
-      customerName: name,
-      customerEmail: `${name.split(" ")[0].toLowerCase()}@email.com`,
-      customerPhone: `+91 98${String(1000000 + i * 73117).slice(0, 8)}`,
-      movieTitle: movies[i % movies.length],
-      cinemaName: cinemas[i % cinemas.length],
-      showDate: dateStr,
-      showTime: times[i % times.length],
-      seats: seatLabels,
-      totalAmount: 250 * seatCount + 50 * (i % 3),
-      status,
-      createdAt: new Date(Date.now() - i * 3_600_000).toISOString(),
-    };
-  });
-}
-
 /* ── Component ───────────────────────────────────────── */
 export function BookingsTable() {
   const [bookings, setBookings] = useState<BookingRow[]>([]);
@@ -79,64 +32,22 @@ export function BookingsTable() {
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
-      const supabase = getSupabaseAdmin();
-      const { data, error } = await supabase
-        .from("bookings")
-        .select(`
-          id, user_name, user_email, user_phone, total_amount, status, created_at, qr_code_hash,
-          shows!inner ( id, date, start_time,
-            movies!inner ( title ),
-            screens!inner ( name, cinema_id,
-              cinemas!inner ( name )
-            )
-          ),
-          booking_seats ( seat_id,
-            seats ( row_label, seat_number )
-          )
-        `)
-        .order("created_at", { ascending: false })
-        .limit(200);
-
-      if (error || !data || data.length === 0) {
-        setBookings(generateMockBookings());
-        setLoading(false);
-        return;
+      const res = await fetch("/api/admin/bookings");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.bookings && Array.isArray(json.bookings)) {
+          setBookings(json.bookings);
+          setLoading(false);
+          return;
+        }
       }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped: BookingRow[] = data.map((b: any) => {
-        const show = b.shows;
-        const movie = show?.movies;
-        const screen = show?.screens;
-        const cinema = screen?.cinemas;
-        const seatLabels = (b.booking_seats || []).map(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (bs: any) => bs.seats ? `${bs.seats.row_label}${bs.seats.seat_number}` : "?"
-        );
-        const hexPart = b.id.replace(/-/g, "").slice(0, 6).toUpperCase();
-
-        return {
-          id: b.id,
-          refId: `BMS-2026-${hexPart}`,
-          customerName: b.user_name,
-          customerEmail: b.user_email,
-          customerPhone: b.user_phone,
-          movieTitle: movie?.title || "Unknown",
-          cinemaName: cinema?.name || "Unknown",
-          showDate: show?.date || "",
-          showTime: show?.start_time || "",
-          seats: seatLabels,
-          totalAmount: b.total_amount,
-          status: b.status,
-          createdAt: b.created_at,
-        };
-      });
-
-      setBookings(mapped);
-    } catch {
-      setBookings(generateMockBookings());
+      setBookings([]);
+    } catch (err) {
+      console.error("Fetch bookings error:", err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -146,17 +57,19 @@ export function BookingsTable() {
   const handleCancel = async (bookingId: string) => {
     setCancelling(bookingId);
     try {
-      const supabase = getSupabaseAdmin();
-      await supabase
-        .from("bookings")
-        .update({ status: "CANCELLED" })
-        .eq("id", bookingId);
+      await fetch("/api/bookings/cancel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId,
+          reason: `Admin cancellation for booking ${bookingId}`,
+        }),
+      });
 
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: "CANCELLED" } : b))
       );
     } catch {
-      // Fallback: update locally anyway for mock mode
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: "CANCELLED" } : b))
       );
