@@ -133,8 +133,10 @@ function BookingContent() {
           console.warn("API shows fetch notice:", e);
         }
 
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(showId);
+
         // 2. If not found via API, try Supabase directly
-        if (!fetchedShow) {
+        if (!fetchedShow && isUUID) {
           try {
             const { data: dbShow } = await supabase
               .from("shows")
@@ -204,8 +206,9 @@ function BookingContent() {
 
         // 100% Database-Driven Occupied & Blocked Seats
         const occupiedSeatIdSet = new Set<string>();
-        try {
-          const { data: dbBookedSeats } = await supabase
+        if (isUUID) {
+          try {
+            const { data: dbBookedSeats } = await supabase
             .from("booking_seats")
             .select(`
               seat_id,
@@ -218,19 +221,20 @@ function BookingContent() {
             .eq("bookings.show_id", showId)
             .neq("bookings.status", "CANCELLED");
 
-          if (dbBookedSeats) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            dbBookedSeats.forEach((b: any) => {
-              if (b.seat_id) occupiedSeatIdSet.add(b.seat_id);
-              if (b.seats?.row_label && b.seats?.seat_number) {
-                occupiedSeatIdSet.add(`${b.seats.row_label}${b.seats.seat_number}`);
-                occupiedSeatIdSet.add(`seat-${b.seats.row_label}-${b.seats.seat_number}`);
-                occupiedSeatIdSet.add(`${b.seats.row_label}-${b.seats.seat_number}`);
-              }
-            });
+            if (dbBookedSeats) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              dbBookedSeats.forEach((b: any) => {
+                if (b.seat_id) occupiedSeatIdSet.add(b.seat_id);
+                if (b.seats?.row_label && b.seats?.seat_number) {
+                  occupiedSeatIdSet.add(`${b.seats.row_label}${b.seats.seat_number}`);
+                  occupiedSeatIdSet.add(`seat-${b.seats.row_label}-${b.seats.seat_number}`);
+                  occupiedSeatIdSet.add(`${b.seats.row_label}-${b.seats.seat_number}`);
+                }
+              });
+            }
+          } catch {
+            // ignore
           }
-        } catch {
-          // ignore
         }
 
         // Also fetch from /api/seats/status for active locks, maintenance blocks, and live booked seats

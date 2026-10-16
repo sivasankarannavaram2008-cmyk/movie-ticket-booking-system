@@ -11,6 +11,10 @@ import { MOCK_MOVIES, CITIES } from "@/lib/mock-data";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function isValidUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -27,7 +31,7 @@ export async function GET(req: NextRequest) {
       }
 
       // If Supabase configured, check database
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured() && isValidUUID(showId)) {
         try {
           const { data: dbShow } = await supabaseAdmin
             .from("shows")
@@ -120,7 +124,23 @@ export async function GET(req: NextRequest) {
           .order("start_time", { ascending: true });
 
         if (date) query = query.eq("date", date);
-        if (movieId) query = query.eq("movie_id", movieId);
+        if (movieId) {
+          if (isValidUUID(movieId)) {
+            query = query.eq("movie_id", movieId);
+          } else {
+            const mock = MOCK_MOVIES.find((m) => m.id === movieId);
+            if (mock) {
+              const { data: dbM } = await supabaseAdmin
+                .from("movies")
+                .select("id")
+                .ilike("title", mock.title.trim())
+                .maybeSingle();
+              if (dbM?.id) {
+                query = query.eq("movie_id", dbM.id);
+              }
+            }
+          }
+        }
 
         const { data: dbShows, error: dbErr } = await query;
         if (!dbErr && dbShows && dbShows.length > 0) {

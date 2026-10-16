@@ -137,8 +137,43 @@ export async function POST(req: NextRequest) {
 
           // 5. Insert rows into booking_seats for each seatId tied to newly created booking ID
           let validSeatIds = seatIds.filter(isValidUUID);
+          const effectiveLabels = (seatLabels && seatLabels.length > 0 ? seatLabels : seatIds).map((s: string) =>
+            s.replace(/^seat-/, "").replace(/-/g, "")
+          );
+
+          // Map seat labels (e.g. A1, B5) to real seat UUIDs for the screen tied to targetShowId
+          try {
+            const { data: showInfo } = await supabaseAdmin
+              .from("shows")
+              .select("screen_id")
+              .eq("id", targetShowId)
+              .maybeSingle();
+
+            if (showInfo?.screen_id) {
+              const { data: screenSeats } = await supabaseAdmin
+                .from("seats")
+                .select("id, row_label, seat_number")
+                .eq("screen_id", showInfo.screen_id);
+
+              if (screenSeats && screenSeats.length > 0) {
+                const labelToIdMap = new Map(
+                  screenSeats.map((st) => [`${st.row_label}${st.seat_number}`.toUpperCase(), st.id])
+                );
+                const resolvedIds = effectiveLabels
+                  .map((lbl: string) => labelToIdMap.get(lbl.toUpperCase()))
+                  .filter(Boolean) as string[];
+
+                if (resolvedIds.length > 0) {
+                  validSeatIds = resolvedIds;
+                }
+              }
+            }
+          } catch (lookupErr) {
+            console.warn("Screen seat lookup notice:", lookupErr);
+          }
+
           if (validSeatIds.length === 0) {
-            // If mock seatIds were used, map them to real seats in database if available
+            // Fallback if unmapped
             const { data: realSeats } = await supabaseAdmin
               .from("seats")
               .select("id")
