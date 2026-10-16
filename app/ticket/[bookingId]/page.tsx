@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { generateTicketQRCode } from "@/lib/qrcode/ticket-qr";
 import { InMemTicket } from "@/types/ticket";
 import { MOCK_MOVIES } from "@/lib/mock-data";
+import { MoviePoster } from "@/components/MoviePoster";
 
 function TicketContent() {
   const params = useParams();
@@ -112,13 +113,17 @@ function TicketContent() {
         {/* TOP SECTION: Movie Poster & Screening Info */}
         <div className="relative p-6 sm:p-8 space-y-5 overflow-hidden">
           {/* Subtle backdrop ambiance */}
-          <div className="absolute inset-0 opacity-15 pointer-events-none">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={movie.backdrop_url}
-              alt=""
-              className="w-full h-full object-cover filter blur-md"
-            />
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
+            {movie.backdrop_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={movie.backdrop_url}
+                alt=""
+                className="w-full h-full object-cover filter blur-md"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-tr from-rose-950/40 via-zinc-900 to-amber-950/30" />
+            )}
           </div>
 
           {/* Ticket Header Brand Bar */}
@@ -138,12 +143,13 @@ function TicketContent() {
 
           <div className="relative z-10 flex gap-5 items-start">
             {/* Poster Thumbnail */}
-            <div className="w-20 sm:w-24 aspect-[2/3] rounded-xl overflow-hidden shadow-lg border border-zinc-800 shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={movie.poster_url}
-                alt={ticket.movieTitle}
-                className="w-full h-full object-cover"
+            <div className="w-20 sm:w-24 shrink-0 shadow-lg">
+              <MoviePoster
+                title={ticket.movieTitle}
+                poster_url={movie.poster_url}
+                size="sm"
+                className="w-20 sm:w-24 rounded-xl"
+                showBottomDetails={false}
               />
             </div>
 

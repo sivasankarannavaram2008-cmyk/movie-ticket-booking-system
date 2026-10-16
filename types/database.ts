@@ -105,7 +105,7 @@ export interface Database {
         Row: {
           id: string;
           title: string;
-          poster_url: string;
+          poster_url: string | null;
           backdrop_url: string | null;
           genre: string[];
           duration_min: number;
@@ -117,7 +117,7 @@ export interface Database {
         Insert: {
           id?: string;
           title: string;
-          poster_url: string;
+          poster_url?: string | null;
           backdrop_url?: string | null;
           genre?: string[];
           duration_min: number;
@@ -129,7 +129,7 @@ export interface Database {
         Update: {
           id?: string;
           title?: string;
-          poster_url?: string;
+          poster_url?: string | null;
           backdrop_url?: string | null;
           genre?: string[];
           duration_min?: number;

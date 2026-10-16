@@ -30,7 +30,7 @@ interface ShowMeta {
   showId: string;
   movieId: string;
   movieTitle: string;
-  posterUrl: string;
+  posterUrl: string | null;
   cinemaName: string;
   cinemaAddress: string;
   screenName: string;

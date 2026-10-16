@@ -18,6 +18,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MoviePoster } from "@/components/MoviePoster";
 import {
   MOCK_MOVIES,
   CITIES,
@@ -107,8 +108,8 @@ function MovieDetailsContent() {
           setMovie({
             id: dbMovie.id,
             title: dbMovie.title,
-            poster_url: dbMovie.poster_url || fallback.poster_url,
-            backdrop_url: dbMovie.backdrop_url || fallback.backdrop_url,
+            poster_url: dbMovie.poster_url ?? null,
+            backdrop_url: dbMovie.backdrop_url ?? null,
             genre: dbMovie.genre && dbMovie.genre.length > 0 ? dbMovie.genre : fallback.genre,
             duration_min: dbMovie.duration_min || fallback.duration_min,
             release_date: dbMovie.release_date || fallback.release_date,
@@ -117,7 +118,7 @@ function MovieDetailsContent() {
             formats: fallback.formats,
             rating: fallback.rating,
             votes: fallback.votes,
-            synopsis: fallback.synopsis,
+            synopsis: "",
           });
         } else {
           // Fallback to rich mock data
@@ -178,16 +179,25 @@ function MovieDetailsContent() {
     <div className="min-h-screen bg-background pb-16">
       {/* 1. Cinematic Hero Banner */}
       <section className="relative overflow-hidden bg-zinc-950 border-b border-zinc-850">
-        {/* Backdrop Image with Multi-Gradient Overlay */}
-        <div className="absolute inset-0 z-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={movie.backdrop_url}
-            alt={movie.title}
-            className="w-full h-full object-cover opacity-25 filter blur-[1px]"
+        {/* Backdrop Dark Ambient Gradient Overlay */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-tr from-zinc-950 via-zinc-900 to-black">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `radial-gradient(circle at 75% 30%, rgba(225, 29, 72, 0.18), rgba(245, 158, 11, 0.1) 40%, transparent 70%),
+                                radial-gradient(circle at 15% 80%, rgba(225, 29, 72, 0.12), transparent 50%)`,
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/90 to-transparent" />
+          {movie.backdrop_url && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={movie.backdrop_url}
+              alt={movie.title}
+              className="w-full h-full object-cover opacity-20 filter blur-[1px]"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/90 to-transparent pointer-events-none" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-12">
@@ -202,16 +212,16 @@ function MovieDetailsContent() {
 
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Poster Card */}
-            <div className="relative aspect-[2/3] w-52 sm:w-64 rounded-xl overflow-hidden shadow-2xl border border-zinc-800 shrink-0 group">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={movie.poster_url}
-                alt={movie.title}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            <div className="w-52 sm:w-64 shrink-0 shadow-2xl">
+              <MoviePoster
+                title={movie.title}
+                poster_url={movie.poster_url}
+                release_date={movie.release_date}
+                censor_rating={movie.censor_rating}
+                formats={movie.formats}
+                genre={movie.genre}
+                size="lg"
               />
-              <div className="absolute top-2.5 left-2.5 bg-black/80 px-2 py-0.5 rounded text-xs font-bold text-white uppercase border border-white/10">
-                {movie.censor_rating}
-              </div>
             </div>
 
             {/* Movie Info */}
@@ -266,14 +276,6 @@ function MovieDetailsContent() {
                 <span>{movie.genre.join(", ")}</span>
                 <span>•</span>
                 <span>Released: {movie.release_date}</span>
-              </div>
-
-              {/* Synopsis */}
-              <div className="pt-2 max-w-3xl">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">
-                  About the Movie
-                </h3>
-                <p className="text-sm text-zinc-300 leading-relaxed">{movie.synopsis}</p>
               </div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import React from "react";
 import { Star, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MoviePoster } from "@/components/MoviePoster";
 
 export interface MovieCardProps {
   title: string;
@@ -31,9 +32,7 @@ export function MovieCard({
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-zinc-600 font-medium">
-            No Poster Available
-          </div>
+          <MoviePoster title={title} poster_url={null} size="sm" showBottomDetails={false} />
         )}
         <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1 text-xs font-semibold text-yellow-400">
           <Star className="w-3.5 h-3.5 fill-yellow-400" />

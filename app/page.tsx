@@ -104,8 +104,8 @@ function HomeContent() {
             return {
               id: dbMovie.id,
               title: dbMovie.title,
-              poster_url: dbMovie.poster_url || matchedMock.poster_url,
-              backdrop_url: dbMovie.backdrop_url || matchedMock.backdrop_url,
+              poster_url: dbMovie.poster_url ?? null,
+              backdrop_url: dbMovie.backdrop_url ?? null,
               genre:
                 dbMovie.genre && dbMovie.genre.length > 0 ? dbMovie.genre : matchedMock.genre,
               duration_min: dbMovie.duration_min || matchedMock.duration_min,
@@ -118,7 +118,7 @@ function HomeContent() {
               formats: matchedMock.formats,
               rating: matchedMock.rating,
               votes: matchedMock.votes,
-              synopsis: matchedMock.synopsis,
+              synopsis: "",
               isComingSoon: matchedMock.isComingSoon || false,
             };
           });

@@ -22,8 +22,8 @@ export const CITIES: MockCity[] = [
 export interface RichMovie {
   id: string;
   title: string;
-  poster_url: string;
-  backdrop_url: string;
+  poster_url: string | null;
+  backdrop_url: string | null;
   genre: string[];
   duration_min: number;
   release_date: string;

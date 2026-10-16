@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { MockPaymentModal } from "@/components/booking/MockPaymentModal";
 import { MOCK_MOVIES, CITIES, getDefaultCinemaForCity } from "@/lib/mock-data";
 import { useCity } from "@/context/CityContext";
+import { MoviePoster } from "@/components/MoviePoster";
 
 interface FnBItem {
   id: string;
@@ -209,11 +210,12 @@ function CheckoutContent() {
             {/* Movie & Show Info Card */}
             <div className="rounded-2xl border border-zinc-850 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-4">
               <div className="flex gap-4 items-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={movie.poster_url}
-                  alt={movie.title}
-                  className="w-16 h-24 rounded-xl object-cover border border-zinc-800 shrink-0"
+                <MoviePoster
+                  title={movie.title}
+                  poster_url={movie.poster_url}
+                  size="sm"
+                  className="w-16 h-24 shrink-0 rounded-xl"
+                  showBottomDetails={false}
                 />
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">

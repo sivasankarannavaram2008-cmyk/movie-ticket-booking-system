@@ -148,12 +148,18 @@ export function Navbar() {
                           onClick={() => setIsSearchOpen(false)}
                           className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-800/80 transition-colors group"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={m.poster_url}
-                            alt={m.title}
-                            className="w-8 h-11 rounded object-cover"
-                          />
+                          {m.poster_url ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={m.poster_url}
+                              alt={m.title}
+                              className="w-8 h-11 rounded object-cover shrink-0"
+                            />
+                          ) : (
+                            <div className="w-8 h-11 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                              <Film className="w-4 h-4 text-amber-400" />
+                            </div>
+                          )}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-white group-hover:text-primary transition-colors truncate">
                               {m.title}

@@ -51,27 +51,51 @@ export function HeroCarousel({ movies, citySlug: propCitySlug, selectedDate }: H
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Background Backdrop Image with Crossfade */}
-      <div className="absolute inset-0 overflow-hidden">
-        {featuredMovies.map((movie, idx) => (
-          <div
-            key={movie.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              idx === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105 pointer-events-none"
-            } transform transition-transform duration-1000`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={movie.backdrop_url || movie.poster_url}
-              alt={movie.title}
-              className="w-full h-full object-cover object-center filter brightness-90"
-            />
-          </div>
-        ))}
+      {/* Background Backdrop with Radial Ambient Backlight & Crossfade */}
+      <div className="absolute inset-0 overflow-hidden bg-gradient-to-tr from-zinc-950 via-zinc-900 to-black">
+        {/* Rich Radial Dark Backlight (Crimson & Amber Glow) */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle at 75% 35%, rgba(225, 29, 72, 0.22), rgba(245, 158, 11, 0.12) 40%, transparent 70%),
+                              radial-gradient(circle at 20% 75%, rgba(225, 29, 72, 0.15), transparent 50%)`,
+          }}
+        />
+
+        {/* Subtle Cinema Grid Pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+
+        {/* Optional Crossfade Backdrops if URLs exist */}
+        {featuredMovies.map((movie, idx) => {
+          const bgUrl = movie.backdrop_url || movie.poster_url;
+          if (!bgUrl) return null;
+          return (
+            <div
+              key={movie.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                idx === currentIndex ? "opacity-35 scale-100" : "opacity-0 scale-105 pointer-events-none"
+              } transform transition-transform duration-1000`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={bgUrl}
+                alt={movie.title}
+                className="w-full h-full object-cover object-center filter brightness-90 blur-[1px]"
+              />
+            </div>
+          );
+        })}
 
         {/* Cinematic Multi-layered Vignette Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/75 to-zinc-950/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/90 via-50% to-transparent w-full md:w-3/4" />
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/75 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/85 via-50% to-transparent w-full md:w-3/4 pointer-events-none" />
       </div>
 
       {/* Slide Content */}
@@ -85,7 +109,7 @@ export function HeroCarousel({ movies, citySlug: propCitySlug, selectedDate }: H
             </span>
 
             <span className="px-2.5 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-white/20 text-xs font-black text-white uppercase tracking-wider">
-              {current.censor_rating}
+              {current.censor_rating || "U/A"}
             </span>
 
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-zinc-700 text-xs font-semibold text-zinc-300">
@@ -117,12 +141,7 @@ export function HeroCarousel({ movies, citySlug: propCitySlug, selectedDate }: H
             <span className="text-zinc-400">{current.languages.join(", ")}</span>
           </div>
 
-          {/* Synopsis */}
-          <p className="text-xs sm:text-sm text-zinc-300/90 line-clamp-2 sm:line-clamp-3 max-w-xl leading-relaxed drop-shadow">
-            {current.synopsis}
-          </p>
-
-          {/* Action Buttons & Format Badges */}
+          {/* Action Buttons & Format Badges (Synopsis completely removed) */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link href={bookingHref}>
               <Button
@@ -130,7 +149,7 @@ export function HeroCarousel({ movies, citySlug: propCitySlug, selectedDate }: H
                 className="h-12 px-6 rounded-xl font-black text-sm gap-2.5 bg-gradient-to-r from-primary via-rose-600 to-amber-500 hover:from-primary-hover hover:to-amber-600 text-white shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:scale-105 transition-all duration-300"
               >
                 <Ticket className="w-5 h-5" />
-                Book Now
+                Book Tickets
               </Button>
             </Link>
 
