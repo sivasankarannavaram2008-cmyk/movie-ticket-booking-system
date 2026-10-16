@@ -108,21 +108,24 @@ export async function GET(req: NextRequest) {
             end_time,
             movie_id,
             movies ( id, title, poster_url ),
-            screens (
+            screens!inner (
               id,
               name,
               screen_tier,
-              cinemas (
+              cinemas!inner (
                 id,
                 name,
                 address,
-                cities ( slug, name )
+                cities!inner ( id, slug, name )
               )
             )
           `)
           .order("date", { ascending: true })
           .order("start_time", { ascending: true });
 
+        if (citySlug) {
+          query = query.eq("screens.cinemas.cities.slug", citySlug.toLowerCase());
+        }
         if (date) query = query.eq("date", date);
         if (movieId) {
           if (isValidUUID(movieId)) {
@@ -153,10 +156,6 @@ export async function GET(req: NextRequest) {
             const sCinema = sScreen?.cinemas;
             const sCity = sCinema?.cities;
 
-            if (citySlug && sCity?.slug?.toLowerCase() !== citySlug.toLowerCase()) {
-              continue;
-            }
-
             const tier = (sScreen?.screen_tier || "Standard") as "IMAX" | "4DX" | "Standard";
             mappedShows.push({
               id: s.id,
@@ -166,8 +165,8 @@ export async function GET(req: NextRequest) {
               cinemaId: sCinema?.id || "c-1",
               cinemaName: sCinema?.name || "Multiplex",
               cinemaAddress: sCinema?.address || "Address",
-              citySlug: sCity?.slug || "mumbai",
-              cityName: sCity?.name || "Mumbai",
+              citySlug: sCity?.slug || citySlug,
+              cityName: sCity?.name || (citySlug.charAt(0).toUpperCase() + citySlug.slice(1)),
               movieId: sMovie?.id || s.movie_id,
               movieTitle: sMovie?.title || "Movie",
               date: s.date,

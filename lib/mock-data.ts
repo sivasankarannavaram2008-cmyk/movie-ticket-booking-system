@@ -521,43 +521,7 @@ export function getMockCinemaShowtimes(citySlug: string, date: string): CinemaSh
 export function getDefaultCinemaForCity(citySlug?: string, showId?: string) {
   const normCity = (citySlug || "hyderabad").toLowerCase();
 
-  if (showId) {
-    const s = showId.toLowerCase();
-    if (s.includes("c-11") || s.includes("hyd-1") || s.includes("hyd-2")) {
-      return {
-        cinemaId: "c-11",
-        cinemaName: "Prasads Multiplex",
-        cinemaAddress: "NTR Gardens, Necklace Road",
-        screenName: "Screen 6 - Giant Format IMAX",
-        screenTier: "IMAX 3D Laser",
-        citySlug: "hyderabad",
-        cityName: "Hyderabad",
-      };
-    }
-    if (s.includes("c-12") || s.includes("hyd-3") || s.includes("hyd-4")) {
-      return {
-        cinemaId: "c-12",
-        cinemaName: "AMB Cinemas",
-        cinemaAddress: "Sarath City Capital Mall, Gachibowli",
-        screenName: "Screen 1 - Laser",
-        screenTier: "Dolby Atmos",
-        citySlug: "hyderabad",
-        cityName: "Hyderabad",
-      };
-    }
-    if (s.includes("c-1") || s.includes("mum")) {
-      return {
-        cinemaId: "c-1",
-        cinemaName: "PVR INOX Palladium",
-        cinemaAddress: "High Street Phoenix, Lower Parel",
-        screenName: "Audi 1",
-        screenTier: "IMAX 3D Laser",
-        citySlug: "mumbai",
-        cityName: "Mumbai",
-      };
-    }
-  }
-
+  // If city is explicitly specified, use city-specific cinema
   if (normCity === "hyderabad") {
     return {
       cinemaId: "c-11",
@@ -570,27 +534,15 @@ export function getDefaultCinemaForCity(citySlug?: string, showId?: string) {
     };
   }
 
-  if (normCity === "delhi-ncr") {
+  if (normCity === "vellore") {
     return {
-      cinemaId: "c-5",
-      cinemaName: "PVR Director's Cut",
-      cinemaAddress: "Ambience Mall, Vasant Kunj",
-      screenName: "Audi 1",
-      screenTier: "IMAX Laser",
-      citySlug: "delhi-ncr",
-      cityName: "Delhi-NCR",
-    };
-  }
-
-  if (normCity === "bengaluru") {
-    return {
-      cinemaId: "c-8",
-      cinemaName: "PVR Superplex Vega City",
-      cinemaAddress: "Bannerghatta Main Road",
-      screenName: "Audi 1",
-      screenTier: "IMAX 3D",
-      citySlug: "bengaluru",
-      cityName: "Bengaluru",
+      cinemaId: "c-21",
+      cinemaName: "PVR Velocity Silk Mill",
+      cinemaAddress: "Officer's Line, Toll Gate, Vellore",
+      screenName: "Audi 1 - Laser IMAX",
+      screenTier: "IMAX 3D Laser",
+      citySlug: "vellore",
+      cityName: "Vellore",
     };
   }
 
@@ -606,6 +558,30 @@ export function getDefaultCinemaForCity(citySlug?: string, showId?: string) {
     };
   }
 
+  if (normCity === "bengaluru") {
+    return {
+      cinemaId: "c-8",
+      cinemaName: "PVR Superplex Vega City",
+      cinemaAddress: "Bannerghatta Main Road",
+      screenName: "Audi 1",
+      screenTier: "IMAX 3D",
+      citySlug: "bengaluru",
+      cityName: "Bengaluru",
+    };
+  }
+
+  if (normCity === "delhi-ncr") {
+    return {
+      cinemaId: "c-5",
+      cinemaName: "PVR Director's Cut",
+      cinemaAddress: "Ambience Mall, Vasant Kunj",
+      screenName: "Audi 1",
+      screenTier: "IMAX Laser",
+      citySlug: "delhi-ncr",
+      cityName: "Delhi-NCR",
+    };
+  }
+
   if (normCity === "mumbai") {
     return {
       cinemaId: "c-1",
@@ -618,16 +594,89 @@ export function getDefaultCinemaForCity(citySlug?: string, showId?: string) {
     };
   }
 
-  if (normCity === "vellore") {
+  if (normCity === "kolkata") {
     return {
-      cinemaId: "c-21",
-      cinemaName: "PVR Velocity Silk Mill",
-      cinemaAddress: "Officer's Line, Toll Gate, Vellore",
-      screenName: "Audi 1 - Laser IMAX",
-      screenTier: "IMAX 3D Laser",
-      citySlug: "vellore",
-      cityName: "Vellore",
+      cinemaId: "c-15",
+      cinemaName: "INOX Quest Mall",
+      cinemaAddress: "Syed Amir Ali Avenue, Park Circus",
+      screenName: "Audi 1",
+      screenTier: "Dolby Atmos",
+      citySlug: "kolkata",
+      cityName: "Kolkata",
     };
+  }
+
+  if (normCity === "pune") {
+    return {
+      cinemaId: "c-17",
+      cinemaName: "PVR Phoenix Marketcity",
+      cinemaAddress: "Viman Nagar, Pune",
+      screenName: "Audi 1",
+      screenTier: "IMAX Laser",
+      citySlug: "pune",
+      cityName: "Pune",
+    };
+  }
+
+  if (normCity === "ahmedabad") {
+    return {
+      cinemaId: "c-19",
+      cinemaName: "PVR Acropolis",
+      cinemaAddress: "SG Highway, Thaltej",
+      screenName: "Audi 1",
+      screenTier: "Dolby Atmos",
+      citySlug: "ahmedabad",
+      cityName: "Ahmedabad",
+    };
+  }
+
+  // Check exact mock prefixes if showId is mock format
+  if (showId) {
+    const s = showId.toLowerCase();
+    if (s.startsWith("c-11-") || s.includes("hyd-1") || s.includes("hyd-2")) {
+      return {
+        cinemaId: "c-11",
+        cinemaName: "Prasads Multiplex",
+        cinemaAddress: "NTR Gardens, Necklace Road",
+        screenName: "Screen 6 - Giant Format IMAX",
+        screenTier: "IMAX 3D Laser",
+        citySlug: "hyderabad",
+        cityName: "Hyderabad",
+      };
+    }
+    if (s.startsWith("c-12-") || s.includes("hyd-3") || s.includes("hyd-4")) {
+      return {
+        cinemaId: "c-12",
+        cinemaName: "AMB Cinemas",
+        cinemaAddress: "Sarath City Capital Mall, Gachibowli",
+        screenName: "Screen 1 - Laser",
+        screenTier: "Dolby Atmos",
+        citySlug: "hyderabad",
+        cityName: "Hyderabad",
+      };
+    }
+    if (s.startsWith("c-21-") || s.startsWith("c-22-") || s.includes("vel-")) {
+      return {
+        cinemaId: "c-21",
+        cinemaName: "PVR Velocity Silk Mill",
+        cinemaAddress: "Officer's Line, Toll Gate, Vellore",
+        screenName: "Audi 1 - Laser IMAX",
+        screenTier: "IMAX 3D Laser",
+        citySlug: "vellore",
+        cityName: "Vellore",
+      };
+    }
+    if (s.startsWith("c-1-") || s.startsWith("c-2-") || s.startsWith("mum-")) {
+      return {
+        cinemaId: "c-1",
+        cinemaName: "PVR INOX Palladium",
+        cinemaAddress: "High Street Phoenix, Lower Parel",
+        screenName: "Audi 1",
+        screenTier: "IMAX 3D Laser",
+        citySlug: "mumbai",
+        cityName: "Mumbai",
+      };
+    }
   }
 
   // Fallback default: Hyderabad

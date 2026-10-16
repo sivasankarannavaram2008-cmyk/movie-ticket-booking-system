@@ -149,7 +149,12 @@ function BookingContent() {
                   id,
                   name,
                   screen_tier,
-                  cinemas (id, name, address)
+                  cinemas (
+                    id,
+                    name,
+                    address,
+                    cities ( slug, name )
+                  )
                 )
               `)
               .eq("id", showId)

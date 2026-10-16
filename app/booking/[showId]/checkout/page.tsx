@@ -87,6 +87,45 @@ function CheckoutContent() {
   const currentCity = CITIES.find((c) => c.slug.toLowerCase() === citySlug.toLowerCase()) || selectedCity;
   const cinemaInfo = getDefaultCinemaForCity(citySlug, showId);
 
+  const [showData, setShowData] = useState<{
+    cinemaName: string;
+    cinemaAddress: string;
+    screenName: string;
+    screenTier: string;
+    citySlug: string;
+    cityName: string;
+    movieTitle: string;
+    date: string;
+    startTime: string;
+  } | null>(null);
+
+  useEffect(() => {
+    async function loadShow() {
+      try {
+        const res = await fetch(`/api/shows?showId=${encodeURIComponent(showId)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.show) {
+            setShowData({
+              cinemaName: json.show.cinemaName,
+              cinemaAddress: json.show.cinemaAddress,
+              screenName: json.show.screenName,
+              screenTier: json.show.formatBadge || json.show.screenTier || "IMAX 3D Laser",
+              citySlug: json.show.citySlug,
+              cityName: json.show.cityName,
+              movieTitle: json.show.movieTitle,
+              date: json.show.date,
+              startTime: json.show.startTime,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("Error fetching show in checkout:", err);
+      }
+    }
+    loadShow();
+  }, [showId]);
+
   // Sync if URL has explicit city param that differs from context
   useEffect(() => {
     if (paramCity && paramCity.toLowerCase() !== selectedCity.slug.toLowerCase()) {
@@ -105,7 +144,16 @@ function CheckoutContent() {
     return selectedSeatLabels.map((s) => `seat-${s}`);
   }, [rawSeatIds, selectedSeatLabels]);
 
-  const movie = MOCK_MOVIES.find((m) => m.id === movieId) || MOCK_MOVIES[0];
+  const movie = MOCK_MOVIES.find((m) => m.id === movieId || m.title === showData?.movieTitle) || MOCK_MOVIES[0];
+
+  const activeCinemaName = showData?.cinemaName || cinemaInfo.cinemaName;
+  const activeScreenName = showData?.screenName || cinemaInfo.screenName;
+  const activeScreenTier = showData?.screenTier || cinemaInfo.screenTier || "IMAX 3D Laser";
+  const activeCityName = showData?.cityName || currentCity.name;
+  const activeCitySlug = showData?.citySlug || citySlug;
+  const activeMovieTitle = showData?.movieTitle || movie.title;
+  const activeDate = showData?.date || new Date().toISOString().split("T")[0];
+  const activeTime = showData?.startTime || "07:30 PM";
 
   // Contact Information State
   const [userName, setUserName] = useState("Aditya Sharma");
@@ -177,11 +225,13 @@ function CheckoutContent() {
     userEmail,
     userPhone,
     totalAmount: grandTotal,
-    movieTitle: movie.title,
-    cinemaName: cinemaInfo.cinemaName,
-    screenName: cinemaInfo.screenName,
-    date: new Date().toISOString().split("T")[0],
-    time: "07:30 PM",
+    movieTitle: activeMovieTitle,
+    cinemaName: activeCinemaName,
+    screenName: activeScreenName,
+    date: activeDate,
+    time: activeTime,
+    city: activeCitySlug,
+    cityName: activeCityName,
   };
 
   return (
@@ -219,11 +269,11 @@ function CheckoutContent() {
                 />
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
-                    {cinemaInfo.screenTier || "IMAX 3D Laser"}
+                    {activeScreenTier}
                   </span>
-                  <h2 className="text-lg font-black text-white">{movie.title}</h2>
+                  <h2 className="text-lg font-black text-white">{activeMovieTitle}</h2>
                   <p className="text-xs text-zinc-400">
-                    {cinemaInfo.cinemaName} • {cinemaInfo.screenName} ({currentCity.name})
+                    {activeCinemaName} • {activeScreenName} ({activeCityName})
                   </p>
                   <div className="flex items-center gap-2 text-xs text-zinc-300 pt-0.5">
                     <span className="font-semibold text-white">Seats:</span>
@@ -231,7 +281,7 @@ function CheckoutContent() {
                       {selectedSeatLabels.join(", ")}
                     </span>
                     <span className="text-zinc-600">•</span>
-                    <span>Today, 07:30 PM</span>
+                    <span>{activeDate}, {activeTime}</span>
                   </div>
                 </div>
               </div>

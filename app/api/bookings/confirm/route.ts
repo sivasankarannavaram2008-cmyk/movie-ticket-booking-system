@@ -81,19 +81,94 @@ export async function POST(req: NextRequest) {
     let targetShowId = showId;
     let createdBookingId = bookingRef;
 
+    let finalMovieTitle = movieTitle;
+    let finalCinemaName = cinemaName;
+    let finalScreenName = screenName;
+    let finalDate = date;
+    let finalTime = time;
+
     if (isSupabaseConfigured()) {
-      if (!isValidUUID(targetShowId)) {
+      if (isValidUUID(targetShowId)) {
         try {
-          const { data: firstShow } = await supabaseAdmin
+          const { data: realShow } = await supabaseAdmin
             .from("shows")
-            .select("id")
+            .select(`
+              id,
+              date,
+              start_time,
+              movies ( title ),
+              screens (
+                name,
+                cinemas (
+                  name,
+                  cities ( name, slug )
+                )
+              )
+            `)
+            .eq("id", targetShowId)
+            .maybeSingle();
+
+          if (realShow) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rMovie: any = realShow.movies;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rScreen: any = realShow.screens;
+            const rCinema = rScreen?.cinemas;
+            const rCity = rCinema?.cities;
+
+            if (rMovie?.title) finalMovieTitle = rMovie.title;
+            if (rCinema?.name) {
+              finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
+            }
+            if (rScreen?.name) finalScreenName = rScreen.name;
+            if (realShow.date) finalDate = realShow.date;
+            if (realShow.start_time) finalTime = realShow.start_time.slice(0, 5);
+          }
+        } catch (queryErr) {
+          console.warn("Could not query show relations:", queryErr);
+        }
+      } else {
+        // If not a UUID, look up a show strictly for the requested city
+        try {
+          const targetCity = (body.city || body.citySlug || "hyderabad").toLowerCase();
+          const { data: matchedCityShow } = await supabaseAdmin
+            .from("shows")
+            .select(`
+              id,
+              date,
+              start_time,
+              movies ( title ),
+              screens!inner (
+                name,
+                cinemas!inner (
+                  name,
+                  cities!inner ( name, slug )
+                )
+              )
+            `)
+            .eq("screens.cinemas.cities.slug", targetCity)
             .limit(1)
             .maybeSingle();
-          if (firstShow?.id) {
-            targetShowId = firstShow.id;
+
+          if (matchedCityShow?.id) {
+            targetShowId = matchedCityShow.id;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rMovie: any = matchedCityShow.movies;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const rScreen: any = matchedCityShow.screens;
+            const rCinema = rScreen?.cinemas;
+            const rCity = rCinema?.cities;
+
+            if (rMovie?.title) finalMovieTitle = rMovie.title;
+            if (rCinema?.name) {
+              finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
+            }
+            if (rScreen?.name) finalScreenName = rScreen.name;
+            if (matchedCityShow.date) finalDate = matchedCityShow.date;
+            if (matchedCityShow.start_time) finalTime = matchedCityShow.start_time.slice(0, 5);
           }
         } catch (err) {
-          console.warn("Could not query fallback show UUID:", err);
+          console.warn("Could not query city-specific show UUID:", err);
         }
       }
 
@@ -216,12 +291,12 @@ export async function POST(req: NextRequest) {
     const inMemRecord: InMemTicket = {
       bookingId: createdBookingId,
       referenceHash: bookingRef,
-      showId,
-      movieTitle,
-      cinemaName,
-      screenName,
-      date,
-      time,
+      showId: targetShowId,
+      movieTitle: finalMovieTitle,
+      cinemaName: finalCinemaName,
+      screenName: finalScreenName,
+      date: finalDate,
+      time: finalTime,
       seatLabels: seatLabels.length > 0 ? seatLabels : seatIds,
       userName,
       userEmail,
@@ -230,11 +305,11 @@ export async function POST(req: NextRequest) {
       qrData: JSON.stringify({
         ref: bookingRef,
         bookingId: createdBookingId,
-        movie: movieTitle,
-        cinema: cinemaName,
+        movie: finalMovieTitle,
+        cinema: finalCinemaName,
         seats: seatLabels.join(", ") || seatIds.join(", "),
-        date,
-        time,
+        date: finalDate,
+        time: finalTime,
         total: totalAmount,
         customer: userName,
       }),
@@ -248,15 +323,15 @@ export async function POST(req: NextRequest) {
     const storedBooking: StoredBooking = {
       id: createdBookingId,
       refId: bookingRef,
-      showId,
+      showId: targetShowId,
       customerName: userName,
       customerEmail: userEmail,
       customerPhone: userPhone,
-      movieTitle: movieTitle || "Blockbuster Movie",
-      cinemaName: cinemaName || "PVR INOX Palladium",
-      screenName: screenName || "Audi 1 (IMAX)",
-      showDate: date || new Date().toISOString().split("T")[0],
-      showTime: time || "07:30 PM",
+      movieTitle: finalMovieTitle || "Blockbuster Movie",
+      cinemaName: finalCinemaName || "Multiplex Theatre",
+      screenName: finalScreenName || "Audi 1",
+      showDate: finalDate || new Date().toISOString().split("T")[0],
+      showTime: finalTime || "07:30 PM",
       seats: seatLabels.length > 0 ? seatLabels : seatIds,
       seatIds: seatIds,
       totalAmount: Number(totalAmount) || 0,

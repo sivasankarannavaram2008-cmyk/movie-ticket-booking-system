@@ -31,7 +31,10 @@ export async function GET() {
               movies (title),
               screens (
                 name,
-                cinemas (name)
+                cinemas (
+                  name,
+                  cities (name, slug)
+                )
               )
             ),
             booking_seats (
@@ -49,6 +52,7 @@ export async function GET() {
             const movie = show?.movies;
             const screen = show?.screens;
             const cinema = screen?.cinemas || show?.cinemas;
+            const city = cinema?.cities;
 
             const seatLabels: string[] = [];
             const seatIds: string[] = [];
@@ -68,6 +72,10 @@ export async function GET() {
             const hexPart = b.id ? b.id.replace(/-/g, "").slice(0, 6).toUpperCase() : "REF";
             const refId = b.booking_ref || b.qr_code_hash || `BMS-2026-${hexPart}`;
 
+            const cinemaDisplay = cinema?.name
+              ? (city?.name ? `${cinema.name} (${city.name})` : cinema.name)
+              : "Cinema Venue";
+
             return {
               id: b.id,
               refId,
@@ -76,7 +84,7 @@ export async function GET() {
               customerEmail: b.user_email || "N/A",
               customerPhone: b.user_phone || "N/A",
               movieTitle: movie?.title || "Movie Presentation",
-              cinemaName: cinema?.name || "Cinema Venue",
+              cinemaName: cinemaDisplay,
               screenName: screen?.name || "Audi",
               showDate: show?.date || (b.created_at ? b.created_at.split("T")[0] : ""),
               showTime: show?.start_time ? show.start_time.slice(0, 5) : "",
