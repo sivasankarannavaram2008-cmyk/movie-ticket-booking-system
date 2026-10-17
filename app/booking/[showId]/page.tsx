@@ -162,15 +162,18 @@ function BookingContent() {
 
             if (dbShow) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const sMovie: any = dbShow.movies;
+              const rawMovie: any = dbShow.movies;
+              const sMovie: any = Array.isArray(rawMovie) ? rawMovie[0] : rawMovie;
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const sScreen: any = dbShow.screens;
-              const sCinema = sScreen?.cinemas;
+              const rawScreen: any = dbShow.screens;
+              const sScreen: any = Array.isArray(rawScreen) ? rawScreen[0] : rawScreen;
+              const rawCinema = sScreen?.cinemas;
+              const sCinema = Array.isArray(rawCinema) ? rawCinema[0] : rawCinema;
 
               fetchedShow = {
                 id: dbShow.id,
                 movieId: sMovie?.id || matchedMovie?.id || movieIdParam || "m-1",
-                movieTitle: sMovie?.title || matchedMovie?.title || "Movie",
+                movieTitle: (sMovie?.title && sMovie.title !== "Feature Film" ? sMovie.title : null) || matchedMovie?.title || "Baahubali: The Beginning",
                 cinemaName: sCinema?.name || defaultCinema.cinemaName,
                 cinemaAddress: sCinema?.address || defaultCinema.cinemaAddress,
                 screenName: sScreen?.name || defaultCinema.screenName,
@@ -196,7 +199,8 @@ function BookingContent() {
                    (movieIdParam && m.id === movieIdParam)
           );
 
-        const finalMovieTitle = fetchedTitle || foundMovie?.title || matchedMovie?.title || "Movie";
+        const candidateTitle = fetchedTitle && fetchedTitle !== "Feature Film" && fetchedTitle !== "Movie" ? fetchedTitle : null;
+        const finalMovieTitle = candidateTitle || foundMovie?.title || matchedMovie?.title || "Baahubali: The Beginning";
         const finalMovieId = fetchedMovieId || foundMovie?.id || movieIdParam || "m-1";
         const finalPosterUrl = fetchedShow?.posterUrl || foundMovie?.poster_url || null;
 

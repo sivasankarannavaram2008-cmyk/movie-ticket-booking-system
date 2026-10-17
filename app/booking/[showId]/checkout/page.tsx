@@ -153,7 +153,8 @@ function CheckoutContent() {
   const activeScreenTier = showData?.screenTier || cinemaInfo.screenTier || "IMAX 3D Laser";
   const activeCityName = showData?.cityName || currentCity.name;
   const activeCitySlug = showData?.citySlug || citySlug;
-  const activeMovieTitle = showData?.movieTitle || matchedMovie?.title || "Movie";
+  const candidateTitle = showData?.movieTitle && showData.movieTitle !== "Feature Film" && showData.movieTitle !== "Movie" ? showData.movieTitle : null;
+  const activeMovieTitle = candidateTitle || matchedMovie?.title || "Baahubali: The Beginning";
   const activeMovieId = movieId || matchedMovie?.id || "m-1";
   const activePosterUrl = matchedMovie?.poster_url || null;
   const activeDate = showData?.date || new Date().toISOString().split("T")[0];

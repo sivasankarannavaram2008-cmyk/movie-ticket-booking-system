@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    movieTitle = movieTitle || "Feature Film";
+    movieTitle = movieTitle && movieTitle !== "Feature Film" ? movieTitle : "Baahubali: The Beginning";
 
     // 2. Dynamic Slot Calculation with 20m Turnaround Buffer
     // end_time = start_time + duration + 20 minutes

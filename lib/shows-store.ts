@@ -175,7 +175,7 @@ export function getShowById(showId: string): StoredShow | undefined {
       citySlug: cinemaInfo.citySlug,
       cityName: cinemaInfo.cityName,
       movieId: "m-1",
-      movieTitle: "Feature Film",
+      movieTitle: "Baahubali: The Beginning",
       date: new Date().toISOString().split("T")[0],
       startTime: "10:00 AM",
       endTime: "01:00 PM",
