@@ -227,9 +227,9 @@ function HomeContent() {
         {/* ================================================================== */}
         {/* SECTION 1: City & Search Control Bar */}
         {/* ================================================================== */}
-        <div className="relative rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md p-3 sm:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+        <div className="relative z-40 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 backdrop-blur-md p-3 sm:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
           {/* City Picker Dropdown */}
-          <div className="relative">
+          <div className="relative z-50">
             <button
               onClick={() => setIsCityDropdownOpen((prev) => !prev)}
               className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-zinc-950/80 border border-zinc-800 hover:border-zinc-700 text-sm font-semibold text-white transition-all hover:bg-zinc-900 group"
@@ -257,10 +257,10 @@ function HomeContent() {
             {isCityDropdownOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[90]"
                   onClick={() => setIsCityDropdownOpen(false)}
                 />
-                <div className="absolute top-14 left-0 w-64 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute top-14 left-0 w-64 rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl p-2 z-[100] animate-in fade-in zoom-in-95 duration-150">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 px-3 py-2 border-b border-zinc-850">
                     Select Cinema City
                   </div>

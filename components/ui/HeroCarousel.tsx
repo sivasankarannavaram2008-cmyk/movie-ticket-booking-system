@@ -47,7 +47,7 @@ export function HeroCarousel({ movies, citySlug: propCitySlug, selectedDate }: H
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-3xl border border-zinc-800/80 bg-zinc-950 shadow-2xl h-[420px] sm:h-[480px] lg:h-[540px] group/hero"
+      className="relative z-0 w-full overflow-hidden rounded-3xl border border-zinc-800/80 bg-zinc-950 shadow-2xl h-[420px] sm:h-[480px] lg:h-[540px] group/hero"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

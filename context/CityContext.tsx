@@ -94,8 +94,9 @@ export function CityProvider({ children }: { children: ReactNode }) {
       try {
         localStorage.setItem("selected_city", nextCity.slug);
         localStorage.setItem("mtbs_city", nextCity.slug);
+        document.cookie = `selected_city=${encodeURIComponent(nextCity.slug)}; path=/; max-age=31536000; SameSite=Lax`;
       } catch (e) {
-        console.warn("Error saving city to localStorage:", e);
+        console.warn("Error saving city to localStorage/cookie:", e);
       }
     }
   }, [citiesList]);

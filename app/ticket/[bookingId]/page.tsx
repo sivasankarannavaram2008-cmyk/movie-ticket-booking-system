@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { generateTicketQRCode } from "@/lib/qrcode/ticket-qr";
 import { InMemTicket } from "@/types/ticket";
 import { MOCK_MOVIES } from "@/lib/mock-data";
-import { MoviePoster } from "@/components/MoviePoster";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 function isValidUUID(str: string): boolean {
@@ -297,16 +296,11 @@ function TicketContent() {
           </div>
 
           <div className="relative z-10 flex gap-5 items-start">
-            {/* Dark Cinema Emblem Thumbnail */}
-            <div className="w-20 sm:w-24 shrink-0 shadow-lg">
-              <MoviePoster
-                title={ticket.movieTitle}
-                poster_url={null}
-                size="sm"
-                className="w-20 sm:w-24 rounded-xl"
-                showBottomDetails={false}
-                showOverlayBadges={false}
-              />
+            {/* Uniform Dark Cinema Placeholder Card */}
+            <div className="w-20 h-28 rounded-xl bg-zinc-800/90 border border-zinc-700/60 flex flex-col items-center justify-center p-2 text-center shadow-inner shrink-0">
+              <span className="text-2xl mb-1">🎬</span>
+              <span className="text-[9px] font-bold tracking-wider text-amber-400 uppercase">IMAX</span>
+              <span className="text-[8px] text-zinc-400 tracking-tight mt-0.5">RELEASE</span>
             </div>
 
             <div className="space-y-1.5 flex-1 min-w-0">

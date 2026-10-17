@@ -86,7 +86,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-800 bg-[#09090b]/95 backdrop-blur-md">
+      <header className="sticky top-0 z-[100] w-full border-b border-zinc-800 bg-[#09090b]/95 backdrop-blur-md">
         {/* Main Primary Navbar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 gap-4">
@@ -135,7 +135,7 @@ export function Navbar() {
 
               {/* Search Results Dropdown */}
               {isSearchOpen && globalSearch.trim().length > 0 && (
-                <div className="absolute top-12 left-0 w-full rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl p-3 z-50 divide-y divide-zinc-800/60 max-h-96 overflow-y-auto">
+                <div className="absolute top-12 left-0 w-full rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl p-3 z-[110] divide-y divide-zinc-800/60 max-h-96 overflow-y-auto">
                   {filteredMovies.length > 0 && (
                     <div className="pb-2">
                       <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 px-2 py-1">
@@ -250,7 +250,7 @@ export function Navbar() {
 
       {/* City Selector Modal */}
       {isCityModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="relative w-full max-w-xl rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-zinc-850 pb-4">
