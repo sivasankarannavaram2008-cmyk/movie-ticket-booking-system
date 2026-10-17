@@ -132,15 +132,16 @@ export async function GET(req: NextRequest) {
             query = query.eq("movie_id", movieId);
           } else {
             const mock = MOCK_MOVIES.find((m) => m.id === movieId);
-            if (mock) {
-              const { data: dbM } = await supabaseAdmin
-                .from("movies")
-                .select("id")
-                .ilike("title", mock.title.trim())
-                .maybeSingle();
-              if (dbM?.id) {
-                query = query.eq("movie_id", dbM.id);
-              }
+            const searchTitle = mock ? mock.title.trim() : movieId;
+            const cleaned = searchTitle.replace(/[:(-].*$/, "").trim();
+            const { data: dbM } = await supabaseAdmin
+              .from("movies")
+              .select("id")
+              .or(`title.ilike.%${searchTitle}%,title.ilike.%${cleaned}%`)
+              .limit(1)
+              .maybeSingle();
+            if (dbM?.id) {
+              query = query.eq("movie_id", dbM.id);
             }
           }
         }

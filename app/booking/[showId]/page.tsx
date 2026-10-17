@@ -52,7 +52,7 @@ function BookingContent() {
 
   const currentCity = CITIES.find((c) => c.slug.toLowerCase() === citySlug.toLowerCase()) || selectedCity;
   const matchedMovie =
-    MOCK_MOVIES.find((m) => m.id === movieIdParam) || MOCK_MOVIES[0];
+    MOCK_MOVIES.find((m) => m.id === movieIdParam || (movieIdParam && m.title.toLowerCase() === movieIdParam.toLowerCase()));
 
   // Sync if URL has explicit city param that differs from context
   useEffect(() => {
@@ -78,9 +78,9 @@ function BookingContent() {
   const defaultCinema = getDefaultCinemaForCity(citySlug, showId);
   const [showMeta, setShowMeta] = useState<ShowMeta>({
     showId,
-    movieId: matchedMovie.id,
-    movieTitle: matchedMovie.title,
-    posterUrl: matchedMovie.poster_url,
+    movieId: matchedMovie?.id || movieIdParam || "m-1",
+    movieTitle: matchedMovie?.title || "Movie",
+    posterUrl: matchedMovie?.poster_url || null,
     cinemaName: defaultCinema.cinemaName,
     cinemaAddress: defaultCinema.cinemaAddress,
     screenName: defaultCinema.screenName,
@@ -169,8 +169,8 @@ function BookingContent() {
 
               fetchedShow = {
                 id: dbShow.id,
-                movieId: sMovie?.id || matchedMovie.id,
-                movieTitle: sMovie?.title || matchedMovie.title,
+                movieId: sMovie?.id || matchedMovie?.id || movieIdParam || "m-1",
+                movieTitle: sMovie?.title || matchedMovie?.title || "Movie",
                 cinemaName: sCinema?.name || defaultCinema.cinemaName,
                 cinemaAddress: sCinema?.address || defaultCinema.cinemaAddress,
                 screenName: sScreen?.name || defaultCinema.screenName,
@@ -187,10 +187,18 @@ function BookingContent() {
           }
         }
 
-        const movieObj =
+        const fetchedTitle = fetchedShow?.movieTitle;
+        const fetchedMovieId = fetchedShow?.movieId;
+        const foundMovie =
           MOCK_MOVIES.find(
-            (m) => m.id === fetchedShow?.movieId || m.title === fetchedShow?.movieTitle
-          ) || matchedMovie;
+            (m) => (fetchedMovieId && m.id === fetchedMovieId) ||
+                   (fetchedTitle && m.title.toLowerCase() === fetchedTitle.toLowerCase()) ||
+                   (movieIdParam && m.id === movieIdParam)
+          );
+
+        const finalMovieTitle = fetchedTitle || foundMovie?.title || matchedMovie?.title || "Movie";
+        const finalMovieId = fetchedMovieId || foundMovie?.id || movieIdParam || "m-1";
+        const finalPosterUrl = fetchedShow?.posterUrl || foundMovie?.poster_url || null;
 
         const classicPrice = Number(fetchedShow?.classicPrice) || 220;
         const primePrice = Number(fetchedShow?.primePrice) || 350;
@@ -198,9 +206,9 @@ function BookingContent() {
 
         setShowMeta({
           showId: fetchedShow?.id || showId,
-          movieId: movieObj.id,
-          movieTitle: movieObj.title,
-          posterUrl: movieObj.poster_url,
+          movieId: finalMovieId,
+          movieTitle: finalMovieTitle,
+          posterUrl: finalPosterUrl,
           cinemaName: fetchedShow?.cinemaName || defaultCinema.cinemaName,
           cinemaAddress: fetchedShow?.cinemaAddress || defaultCinema.cinemaAddress,
           screenName: fetchedShow?.screenName || defaultCinema.screenName,

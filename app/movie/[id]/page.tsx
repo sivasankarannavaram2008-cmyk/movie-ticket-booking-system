@@ -97,14 +97,36 @@ function MovieDetailsContent() {
       setIsLoading(true);
       try {
         // 1. Fetch movie details with description
-        const { data: dbMovie, error: movieError } = await supabase
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(movieId);
+        let movieQuery = supabase
           .from("movies")
-          .select("id, title, description, poster_url, backdrop_url, genre, duration_min, release_date, censor_rating, languages")
-          .eq("id", movieId)
-          .maybeSingle();
+          .select("id, title, description, poster_url, backdrop_url, genre, duration_min, release_date, censor_rating, languages");
+
+        if (isUUID) {
+          movieQuery = movieQuery.eq("id", movieId);
+        } else {
+          const cleaned = movieId.replace(/[-_]/g, " ").trim();
+          movieQuery = movieQuery.or(`title.ilike.%${movieId}%,title.ilike.%${cleaned}%`);
+        }
+
+        const { data: dbMovie, error: movieError } = await movieQuery.limit(1).maybeSingle();
+
+        let resolvedMovieId = movieId;
 
         if (dbMovie && !movieError) {
-          const fallback = MOCK_MOVIES.find((m) => m.title === dbMovie.title) || MOCK_MOVIES[0];
+          resolvedMovieId = dbMovie.id;
+          const fallback = MOCK_MOVIES.find((m) => m.title.toLowerCase() === dbMovie.title.toLowerCase()) || {
+            formats: ["2D", "IMAX", "Dolby Atmos"],
+            rating: 8.8,
+            votes: "145.2K",
+            genre: dbMovie.genre || ["Action", "Drama"],
+            duration_min: dbMovie.duration_min || 165,
+            release_date: dbMovie.release_date || "2026",
+            censor_rating: dbMovie.censor_rating || "U/A",
+            languages: dbMovie.languages || ["Telugu", "Hindi"],
+            description: "",
+            synopsis: "",
+          };
           setMovie({
             id: dbMovie.id,
             title: dbMovie.title,
@@ -122,19 +144,39 @@ function MovieDetailsContent() {
             synopsis: dbMovie.description || fallback.description || fallback.synopsis || "",
           });
         } else {
-          // Fallback to rich mock data
-          const found = MOCK_MOVIES.find((m) => m.id === movieId) || MOCK_MOVIES[0];
-          setMovie({
-            ...found,
-            description: found.description || found.synopsis || "",
-          });
+          // Fallback to rich mock data if matching
+          const found = MOCK_MOVIES.find((m) => m.id === movieId || m.title.toLowerCase().includes(movieId.toLowerCase()));
+          if (found) {
+            setMovie({
+              ...found,
+              description: found.description || found.synopsis || "",
+            });
+          } else {
+            const prettyTitle = decodeURIComponent(movieId).replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+            setMovie({
+              id: movieId,
+              title: prettyTitle,
+              description: "Screening across premier multiplex auditoriums with immersive sound and laser projection.",
+              poster_url: null,
+              backdrop_url: null,
+              genre: ["Action", "Drama"],
+              duration_min: 160,
+              release_date: "2026",
+              censor_rating: "U/A",
+              languages: ["Telugu", "Hindi", "Tamil"],
+              formats: ["2D", "IMAX 3D", "Dolby Atmos"],
+              rating: 8.5,
+              votes: "95.2K",
+              synopsis: "Screening across premier multiplex auditoriums with immersive sound and laser projection.",
+            });
+          }
         }
 
         // 2. Fetch live showtimes from unified shows API (checks published store & Supabase)
         let liveLoaded = false;
         try {
           const res = await fetch(
-            `/api/shows?movieId=${encodeURIComponent(movieId)}&city=${encodeURIComponent(citySlug)}&date=${encodeURIComponent(selectedDate)}`
+            `/api/shows?movieId=${encodeURIComponent(resolvedMovieId)}&city=${encodeURIComponent(citySlug)}&date=${encodeURIComponent(selectedDate)}`
           );
           if (res.ok) {
             const json = await res.json();

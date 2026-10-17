@@ -14,6 +14,7 @@ import {
   Share2,
   Sparkles,
   Download,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateTicketQRCode } from "@/lib/qrcode/ticket-qr";
@@ -28,10 +29,12 @@ function TicketContent() {
   const [ticket, setTicket] = useState<InMemTicket | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     async function loadTicket() {
       setIsLoading(true);
+      setIsNotFound(false);
       try {
         const res = await fetch(`/api/bookings/confirm?bookingId=${encodeURIComponent(bookingId)}`);
         if (res.ok) {
@@ -44,31 +47,10 @@ function TicketContent() {
           }
         }
 
-        // Fallback simulated ticket
-        const fallbackMovie = MOCK_MOVIES[0];
-        const fallbackTicket: InMemTicket = {
-          bookingId,
-          referenceHash: bookingId.startsWith("BMS") ? bookingId : `BMS-2026-${bookingId.substring(0, 6)}`,
-          showId: "show-1",
-          movieTitle: fallbackMovie.title,
-          cinemaName: "PVR INOX Palladium",
-          screenName: "Audi 1 - Laser IMAX 3D",
-          date: new Date().toISOString().split("T")[0],
-          time: "07:30 PM",
-          seatLabels: ["E12", "E13"],
-          userName: "Aditya Sharma",
-          userEmail: "aditya.sharma@example.com",
-          userPhone: "+91 98765 43210",
-          totalAmount: 620,
-          qrData: JSON.stringify({ ref: bookingId, movie: fallbackMovie.title, seats: "E12, E13" }),
-          createdAt: new Date().toISOString(),
-        };
-
-        setTicket(fallbackTicket);
-        const qr = await generateTicketQRCode(fallbackTicket.qrData);
-        setQrCodeUrl(qr);
+        setIsNotFound(true);
       } catch (err) {
         console.error("Error loading ticket:", err);
+        setIsNotFound(true);
       } finally {
         setIsLoading(false);
       }
@@ -83,7 +65,7 @@ function TicketContent() {
     }
   };
 
-  if (isLoading || !ticket) {
+  if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 space-y-6 animate-pulse">
         <div className="h-20 bg-zinc-900 rounded-2xl" />
@@ -92,7 +74,47 @@ function TicketContent() {
     );
   }
 
-  const movie = MOCK_MOVIES.find((m) => m.title === ticket.movieTitle) || MOCK_MOVIES[0];
+  if (isNotFound || !ticket) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4 py-16 text-center space-y-5">
+        <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 shadow-xl">
+          <AlertCircle className="w-8 h-8 text-rose-500" />
+        </div>
+        <div className="space-y-2 max-w-md">
+          <h2 className="text-2xl font-black text-white">Ticket Not Found</h2>
+          <p className="text-sm text-zinc-400">
+            We could not find an active reservation for reference{" "}
+            <span className="font-mono text-zinc-200 font-semibold px-2 py-0.5 rounded bg-zinc-850">
+              {bookingId}
+            </span>
+            .
+          </p>
+        </div>
+        <div className="flex gap-3 pt-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border border-zinc-800 bg-zinc-900 text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            Return Home
+          </Link>
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-primary hover:bg-primary-hover text-white transition-colors shadow-lg shadow-primary/20"
+          >
+            View Admin Orders
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const matchedMovie = MOCK_MOVIES.find(
+    (m) => m.title.toLowerCase() === ticket.movieTitle.toLowerCase() ||
+           ticket.movieTitle.toLowerCase().includes(m.title.toLowerCase())
+  );
+  const posterUrl = ticket.posterUrl ?? matchedMovie?.poster_url ?? null;
+  const backdropUrl = ticket.backdropUrl ?? matchedMovie?.backdrop_url ?? null;
 
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8">
@@ -114,10 +136,10 @@ function TicketContent() {
         <div className="relative p-6 sm:p-8 space-y-5 overflow-hidden">
           {/* Subtle backdrop ambiance */}
           <div className="absolute inset-0 opacity-20 pointer-events-none">
-            {movie.backdrop_url ? (
+            {backdropUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                src={movie.backdrop_url}
+                src={backdropUrl}
                 alt=""
                 className="w-full h-full object-cover filter blur-md"
               />
@@ -146,7 +168,7 @@ function TicketContent() {
             <div className="w-20 sm:w-24 shrink-0 shadow-lg">
               <MoviePoster
                 title={ticket.movieTitle}
-                poster_url={movie.poster_url}
+                poster_url={posterUrl}
                 size="sm"
                 className="w-20 sm:w-24 rounded-xl"
                 showBottomDetails={false}

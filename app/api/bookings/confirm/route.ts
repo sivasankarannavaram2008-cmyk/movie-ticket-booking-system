@@ -86,6 +86,9 @@ export async function POST(req: NextRequest) {
     let finalScreenName = screenName;
     let finalDate = date;
     let finalTime = time;
+    let finalPosterUrl: string | null = null;
+    let finalBackdropUrl: string | null = null;
+    let finalDescription: string | null = null;
 
     if (isSupabaseConfigured()) {
       if (isValidUUID(targetShowId)) {
@@ -96,7 +99,7 @@ export async function POST(req: NextRequest) {
               id,
               date,
               start_time,
-              movies ( title ),
+              movies ( id, title, poster_url, backdrop_url, description ),
               screens (
                 name,
                 cinemas (
@@ -117,6 +120,9 @@ export async function POST(req: NextRequest) {
             const rCity = rCinema?.cities;
 
             if (rMovie?.title) finalMovieTitle = rMovie.title;
+            if (rMovie?.poster_url) finalPosterUrl = rMovie.poster_url;
+            if (rMovie?.backdrop_url) finalBackdropUrl = rMovie.backdrop_url;
+            if (rMovie?.description) finalDescription = rMovie.description;
             if (rCinema?.name) {
               finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
             }
@@ -128,47 +134,132 @@ export async function POST(req: NextRequest) {
           console.warn("Could not query show relations:", queryErr);
         }
       } else {
-        // If not a UUID, look up a show strictly for the requested city
+        // If not a UUID, resolve movie and show strictly for the requested movie and city
         try {
           const targetCity = (body.city || body.citySlug || "hyderabad").toLowerCase();
-          const { data: matchedCityShow } = await supabaseAdmin
-            .from("shows")
-            .select(`
-              id,
-              date,
-              start_time,
-              movies ( title ),
-              screens!inner (
-                name,
-                cinemas!inner (
-                  name,
-                  cities!inner ( name, slug )
-                )
-              )
-            `)
-            .eq("screens.cinemas.cities.slug", targetCity)
+          const cleanedTitle = finalMovieTitle.replace(/[:(-].*$/, "").trim();
+          let movieDbId: string | null = null;
+
+          // 1. Find matching movie in Supabase
+          const { data: matchedDbMovie } = await supabaseAdmin
+            .from("movies")
+            .select("id, title, poster_url, backdrop_url, description")
+            .or(`title.ilike.%${finalMovieTitle}%,title.ilike.%${cleanedTitle}%`)
             .limit(1)
             .maybeSingle();
 
-          if (matchedCityShow?.id) {
-            targetShowId = matchedCityShow.id;
+          if (matchedDbMovie) {
+            movieDbId = matchedDbMovie.id;
+            finalMovieTitle = matchedDbMovie.title;
+            finalPosterUrl = matchedDbMovie.poster_url ?? null;
+            finalBackdropUrl = matchedDbMovie.backdrop_url ?? null;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const rMovie: any = matchedCityShow.movies;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const rScreen: any = matchedCityShow.screens;
-            const rCinema = rScreen?.cinemas;
-            const rCity = rCinema?.cities;
+            finalDescription = (matchedDbMovie as any).description ?? null;
+          }
 
-            if (rMovie?.title) finalMovieTitle = rMovie.title;
-            if (rCinema?.name) {
-              finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
+          // 2. Find a show specifically for this movie
+          let matchedShowId: string | null = null;
+          if (movieDbId) {
+            const { data: movieShowInCity } = await supabaseAdmin
+              .from("shows")
+              .select(`
+                id,
+                date,
+                start_time,
+                screens!inner (
+                  name,
+                  cinemas!inner (
+                    name,
+                    cities!inner ( name, slug )
+                  )
+                )
+              `)
+              .eq("movie_id", movieDbId)
+              .eq("screens.cinemas.cities.slug", targetCity)
+              .limit(1)
+              .maybeSingle();
+
+            if (movieShowInCity?.id) {
+              matchedShowId = movieShowInCity.id;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const rScreen: any = movieShowInCity.screens;
+              const rCinema = rScreen?.cinemas;
+              const rCity = rCinema?.cities;
+              if (rCinema?.name) {
+                finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
+              }
+              if (rScreen?.name) finalScreenName = rScreen.name;
+              if (movieShowInCity.date) finalDate = movieShowInCity.date;
+              if (movieShowInCity.start_time) finalTime = movieShowInCity.start_time.slice(0, 5);
+            } else {
+              const { data: anyMovieShow } = await supabaseAdmin
+                .from("shows")
+                .select("id, date, start_time")
+                .eq("movie_id", movieDbId)
+                .limit(1)
+                .maybeSingle();
+
+              if (anyMovieShow?.id) {
+                matchedShowId = anyMovieShow.id;
+              }
             }
-            if (rScreen?.name) finalScreenName = rScreen.name;
-            if (matchedCityShow.date) finalDate = matchedCityShow.date;
-            if (matchedCityShow.start_time) finalTime = matchedCityShow.start_time.slice(0, 5);
+          }
+
+          // 3. If no show found for this movie, provision one in an active screen
+          if (!matchedShowId) {
+            const { data: targetScreen } = await supabaseAdmin
+              .from("screens")
+              .select("id, name, cinemas!inner(name, cities!inner(name, slug))")
+              .eq("cinemas.cities.slug", targetCity)
+              .limit(1)
+              .maybeSingle();
+
+            if (targetScreen?.id) {
+              if (!movieDbId) {
+                const { data: createdMovie } = await supabaseAdmin
+                  .from("movies")
+                  .insert({
+                    title: finalMovieTitle,
+                    censor_rating: "U/A",
+                    duration_min: 160,
+                    genre: ["Action", "Drama"],
+                    release_date: new Date().toISOString().split("T")[0],
+                  })
+                  .select("id")
+                  .maybeSingle();
+                if (createdMovie?.id) movieDbId = createdMovie.id;
+              }
+
+              if (movieDbId) {
+                const { data: provisionedShow } = await supabaseAdmin
+                  .from("shows")
+                  .insert({
+                    screen_id: targetScreen.id,
+                    movie_id: movieDbId,
+                    date: finalDate,
+                    start_time: finalTime.length === 5 ? `${finalTime}:00` : "19:30:00",
+                    end_time: "22:30:00",
+                  })
+                  .select("id")
+                  .maybeSingle();
+                if (provisionedShow?.id) matchedShowId = provisionedShow.id;
+              }
+            }
+          }
+
+          if (matchedShowId) {
+            targetShowId = matchedShowId;
+          } else {
+            // As a fallback foreign key, retrieve an existing show UUID without overwriting finalMovieTitle
+            const { data: anyShow } = await supabaseAdmin
+              .from("shows")
+              .select("id")
+              .limit(1)
+              .maybeSingle();
+            if (anyShow?.id) targetShowId = anyShow.id;
           }
         } catch (err) {
-          console.warn("Could not query city-specific show UUID:", err);
+          console.warn("Could not query movie-specific show UUID:", err);
         }
       }
 
@@ -319,6 +410,9 @@ export async function POST(req: NextRequest) {
       userEmail,
       userPhone,
       totalAmount: Number(totalAmount),
+      posterUrl: finalPosterUrl,
+      backdropUrl: finalBackdropUrl,
+      description: finalDescription,
       qrData: JSON.stringify({
         ref: bookingRef,
         bookingId: createdBookingId,
@@ -426,6 +520,7 @@ export async function GET(req: NextRequest) {
           .from("bookings")
           .select(`
             id,
+            booking_ref,
             user_name,
             user_email,
             user_phone,
@@ -437,60 +532,108 @@ export async function GET(req: NextRequest) {
               id,
               date,
               start_time,
-              movies (title, poster_url),
-              screens (name, screen_tier, cinemas (name, address))
+              movies ( id, title, description, poster_url, backdrop_url ),
+              screens ( id, name, screen_tier, cinemas ( id, name, address, cities ( name, slug ) ) )
             ),
             booking_seats (
-              seats (row_label, seat_number, price)
+              seat_id,
+              price,
+              seats ( id, row_label, seat_number, price )
             )
           `);
 
-      if (isValidUUID(bookingId)) {
-        query = query.eq("id", bookingId);
-      } else {
-        query = query.eq("qr_code_hash", bookingId);
+        if (isValidUUID(bookingId)) {
+          query = query.or(`id.eq.${bookingId},qr_code_hash.eq.${bookingId}`);
+        } else {
+          query = query.or(`booking_ref.eq.${bookingId},qr_code_hash.eq.${bookingId}`);
+        }
+
+        let dbBooking = null;
+        const { data, error } = await query.maybeSingle();
+        if (data && !error) {
+          dbBooking = data;
+        } else if (error && error.message.includes("booking_ref")) {
+          // Fallback if booking_ref column not present in schema
+          const fallbackRes = await supabaseAdmin
+            .from("bookings")
+            .select(`
+              id,
+              user_name,
+              user_email,
+              user_phone,
+              total_amount,
+              status,
+              qr_code_hash,
+              created_at,
+              shows (
+                id,
+                date,
+                start_time,
+                movies ( id, title, description, poster_url, backdrop_url ),
+                screens ( id, name, screen_tier, cinemas ( id, name, address, cities ( name, slug ) ) )
+              ),
+              booking_seats (
+                seat_id,
+                price,
+                seats ( id, row_label, seat_number, price )
+              )
+            `)
+            .or(isValidUUID(bookingId) ? `id.eq.${bookingId},qr_code_hash.eq.${bookingId}` : `qr_code_hash.eq.${bookingId}`)
+            .maybeSingle();
+          dbBooking = fallbackRes.data;
+        }
+
+        if (dbBooking) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const sShow: any = dbBooking.shows;
+          const sMovie = sShow?.movies;
+          const sScreen = sShow?.screens;
+          const sCinema = sScreen?.cinemas;
+          const sCity = sCinema?.cities;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const sSeats: any[] = dbBooking.booking_seats || [];
+
+          const seatLabels = sSeats
+            .map((bs) => (bs.seats?.row_label && bs.seats?.seat_number ? `${bs.seats.row_label}${bs.seats.seat_number}` : null))
+            .filter(Boolean) as string[];
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const bookingRecord: any = dbBooking;
+          const ticket: InMemTicket = {
+            bookingId: bookingRecord.id,
+            referenceHash: bookingRecord.booking_ref || bookingRecord.qr_code_hash || `BMS-${bookingRecord.id.substring(0, 8)}`,
+            showId: sShow?.id || "show",
+            movieTitle: sMovie?.title || "Movie",
+            cinemaName: sCinema?.name ? (sCity?.name ? `${sCinema.name} (${sCity.name})` : sCinema.name) : "Cinema",
+            screenName: sScreen?.name || "Screen",
+            date: sShow?.date || new Date().toISOString().split("T")[0],
+            time: sShow?.start_time?.slice(0, 5) || "07:30 PM",
+            seatLabels: seatLabels.length > 0 ? seatLabels : ["Confirmed"],
+            userName: bookingRecord.user_name,
+            userEmail: bookingRecord.user_email,
+            userPhone: bookingRecord.user_phone,
+            totalAmount: Number(bookingRecord.total_amount),
+            posterUrl: sMovie?.poster_url || null,
+            backdropUrl: sMovie?.backdrop_url || null,
+            description: sMovie?.description || null,
+            qrData: JSON.stringify({
+              ref: bookingRecord.booking_ref || bookingRecord.qr_code_hash,
+              id: bookingRecord.id,
+              movie: sMovie?.title,
+              cinema: sCinema?.name,
+              seats: seatLabels.join(", "),
+              date: sShow?.date,
+              time: sShow?.start_time?.slice(0, 5),
+            }),
+            createdAt: dbBooking.created_at,
+          };
+
+          return NextResponse.json({ ticket }, { status: 200 });
+        }
+      } catch (queryErr) {
+        console.warn("GET ticket query error:", queryErr);
       }
-
-      const { data: dbBooking } = await query.maybeSingle();
-
-      if (dbBooking) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sShow: any = dbBooking.shows;
-        const sMovie = sShow?.movies;
-        const sScreen = sShow?.screens;
-        const sCinema = sScreen?.cinemas;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sSeats: any[] = dbBooking.booking_seats || [];
-
-        const ticket: InMemTicket = {
-          bookingId: dbBooking.id,
-          referenceHash: dbBooking.qr_code_hash || `BMS-${dbBooking.id.substring(0, 8)}`,
-          showId: sShow?.id || "show",
-          movieTitle: sMovie?.title || "Movie",
-          cinemaName: sCinema?.name || "Cinema",
-          screenName: sScreen?.name || "Screen",
-          date: sShow?.date || new Date().toISOString().split("T")[0],
-          time: sShow?.start_time?.slice(0, 5) || "07:30 PM",
-          seatLabels: sSeats.map((bs) => `${bs.seats?.row_label}${bs.seats?.seat_number}`),
-          userName: dbBooking.user_name,
-          userEmail: dbBooking.user_email,
-          userPhone: dbBooking.user_phone,
-          totalAmount: Number(dbBooking.total_amount),
-          qrData: JSON.stringify({
-            ref: dbBooking.qr_code_hash,
-            id: dbBooking.id,
-            movie: sMovie?.title,
-            seats: sSeats.map((bs) => `${bs.seats?.row_label}${bs.seats?.seat_number}`).join(", "),
-          }),
-          createdAt: dbBooking.created_at,
-        };
-
-        return NextResponse.json({ ticket }, { status: 200 });
-      }
-    } catch (queryErr) {
-      console.warn("GET ticket query error:", queryErr);
     }
-  }
 
     return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
   } catch (err) {

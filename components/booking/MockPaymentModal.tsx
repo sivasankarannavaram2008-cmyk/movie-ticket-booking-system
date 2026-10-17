@@ -34,6 +34,8 @@ interface MockPaymentModalProps {
     screenName: string;
     date: string;
     time: string;
+    city?: string;
+    cityName?: string;
   };
 }
 
@@ -108,6 +110,7 @@ export function MockPaymentModal({
         screenName: bookingPayload.screenName,
         date: bookingPayload.date,
         time: bookingPayload.time,
+        city: bookingPayload.city,
       };
 
       const res = await fetch("/api/bookings/confirm", {

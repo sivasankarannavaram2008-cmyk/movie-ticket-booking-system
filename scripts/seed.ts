@@ -782,6 +782,18 @@ async function seed() {
   console.log(`   ✅ Synced Telugu Movie Catalog (${activeMovies.length} titles):`);
   activeMovies.forEach((m) => console.log(`      - ${m.title}`));
 
+  // Also include ALL other movies in the database (e.g. K.G.F, Kantara, etc.)
+  // so that every single movie in the catalog has scheduled shows across screens and cities
+  const { data: allDbMovies } = await supabase.from("movies").select("id, title");
+  if (allDbMovies && allDbMovies.length > 0) {
+    for (const m of allDbMovies) {
+      if (!activeMovies.some((am) => am.id === m.id)) {
+        activeMovies.push({ id: m.id, title: m.title });
+      }
+    }
+    console.log(`   🎬 Total Movies Scheduled in Catalog: ${activeMovies.length} titles`);
+  }
+
   // --------------------------------------------------------------------------
   // 4. Standard 180-Seat Matrix Generation (15 Rows x 12 Columns = 180 Seats)
   // --------------------------------------------------------------------------

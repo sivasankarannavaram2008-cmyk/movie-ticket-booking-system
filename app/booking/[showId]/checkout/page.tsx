@@ -144,14 +144,18 @@ function CheckoutContent() {
     return selectedSeatLabels.map((s) => `seat-${s}`);
   }, [rawSeatIds, selectedSeatLabels]);
 
-  const movie = MOCK_MOVIES.find((m) => m.id === movieId || m.title === showData?.movieTitle) || MOCK_MOVIES[0];
+  const matchedMovie = MOCK_MOVIES.find(
+    (m) => m.id === movieId || (showData?.movieTitle && m.title.toLowerCase() === showData.movieTitle.toLowerCase())
+  );
 
   const activeCinemaName = showData?.cinemaName || cinemaInfo.cinemaName;
   const activeScreenName = showData?.screenName || cinemaInfo.screenName;
   const activeScreenTier = showData?.screenTier || cinemaInfo.screenTier || "IMAX 3D Laser";
   const activeCityName = showData?.cityName || currentCity.name;
   const activeCitySlug = showData?.citySlug || citySlug;
-  const activeMovieTitle = showData?.movieTitle || movie.title;
+  const activeMovieTitle = showData?.movieTitle || matchedMovie?.title || "Movie";
+  const activeMovieId = movieId || matchedMovie?.id || "m-1";
+  const activePosterUrl = matchedMovie?.poster_url || null;
   const activeDate = showData?.date || new Date().toISOString().split("T")[0];
   const activeTime = showData?.startTime || "07:30 PM";
 
@@ -240,7 +244,7 @@ function CheckoutContent() {
       <header className="sticky top-16 z-30 bg-zinc-950/95 backdrop-blur-md border-b border-zinc-800 py-4 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link
-            href={`/booking/${showId}?city=${encodeURIComponent(citySlug)}&movieId=${movie.id}`}
+            href={`/booking/${showId}?city=${encodeURIComponent(citySlug)}&movieId=${encodeURIComponent(activeMovieId)}`}
             className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -261,8 +265,8 @@ function CheckoutContent() {
             <div className="rounded-2xl border border-zinc-850 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-4">
               <div className="flex gap-4 items-center">
                 <MoviePoster
-                  title={movie.title}
-                  poster_url={movie.poster_url}
+                  title={activeMovieTitle}
+                  poster_url={activePosterUrl}
                   size="sm"
                   className="w-16 h-24 shrink-0 rounded-xl"
                   showBottomDetails={false}

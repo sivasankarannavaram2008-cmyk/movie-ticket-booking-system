@@ -14,4 +14,7 @@ export interface InMemTicket {
   totalAmount: number;
   qrData: string;
   createdAt: string;
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
+  description?: string | null;
 }
