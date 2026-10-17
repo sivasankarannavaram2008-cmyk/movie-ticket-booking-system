@@ -253,12 +253,10 @@ function TicketContent() {
     );
   }
 
-  const matchedMovie = MOCK_MOVIES.find(
-    (m) => m.title.toLowerCase() === ticket.movieTitle.toLowerCase() ||
-           ticket.movieTitle.toLowerCase().includes(m.title.toLowerCase())
-  );
-  const posterUrl = ticket.posterUrl ?? matchedMovie?.poster_url ?? null;
-  const backdropUrl = ticket.backdropUrl ?? matchedMovie?.backdrop_url ?? null;
+  // CRITICAL: Database poster_url and backdrop_url are NULL.
+  // Enforce sleek dark cinema placeholder and remove any external photo fallback.
+  const posterUrl = null;
+  const backdropUrl = null;
 
   return (
     <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8">
@@ -278,18 +276,9 @@ function TicketContent() {
       <div className="max-w-xl mx-auto bg-zinc-950 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative print:border-black print:text-black">
         {/* TOP SECTION: Movie Poster & Screening Info */}
         <div className="relative p-6 sm:p-8 space-y-5 overflow-hidden">
-          {/* Subtle backdrop ambiance */}
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-            {backdropUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={backdropUrl}
-                alt=""
-                className="w-full h-full object-cover filter blur-md"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-tr from-rose-950/40 via-zinc-900 to-amber-950/30" />
-            )}
+          {/* Subtle dark cinema ambient backdrop aura */}
+          <div className="absolute inset-0 opacity-25 pointer-events-none">
+            <div className="w-full h-full bg-gradient-to-tr from-rose-950/40 via-zinc-900 to-amber-950/30" />
           </div>
 
           {/* Ticket Header Brand Bar */}
@@ -308,14 +297,15 @@ function TicketContent() {
           </div>
 
           <div className="relative z-10 flex gap-5 items-start">
-            {/* Poster Thumbnail */}
+            {/* Dark Cinema Emblem Thumbnail */}
             <div className="w-20 sm:w-24 shrink-0 shadow-lg">
               <MoviePoster
                 title={ticket.movieTitle}
-                poster_url={posterUrl}
+                poster_url={null}
                 size="sm"
                 className="w-20 sm:w-24 rounded-xl"
                 showBottomDetails={false}
+                showOverlayBadges={false}
               />
             </div>
 

@@ -61,11 +61,14 @@ export function MoviePoster({
 
   // Sizing adjustments for icon and fonts
   const iconSizeClasses = {
-    sm: "w-6 h-6",
+    sm: "w-5 h-5",
     md: "w-10 h-10 sm:w-12 sm:h-12",
     lg: "w-14 h-14",
     xl: "w-16 h-16",
   }[size];
+
+  const containerPadding = size === "sm" ? "p-2 sm:p-2.5" : "p-4 sm:p-5";
+  const plaquePadding = size === "sm" ? "p-2 rounded-xl" : "p-3.5 sm:p-4 rounded-2xl";
 
   const titleSizeClasses = {
     sm: "text-xs font-bold leading-tight line-clamp-1",
@@ -76,7 +79,7 @@ export function MoviePoster({
 
   return (
     <div
-      className={`relative ${aspectRatio} w-full overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-zinc-800/90 shadow-2xl flex flex-col justify-between p-4 sm:p-5 select-none transition-all duration-300 hover:border-zinc-700 hover:shadow-primary/10 ${className}`}
+      className={`relative ${aspectRatio} w-full overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-zinc-800/90 shadow-2xl flex flex-col justify-between ${containerPadding} select-none transition-all duration-300 hover:border-zinc-700 hover:shadow-primary/10 ${className}`}
     >
       {/* Ambient Radial Glowing Meshes */}
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-gradient-to-br from-rose-600/20 to-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -93,7 +96,7 @@ export function MoviePoster({
       />
 
       {/* TOP STRIP: Badges */}
-      {showOverlayBadges ? (
+      {showOverlayBadges && size !== "sm" ? (
         <div className="relative z-10 flex items-center justify-between gap-2">
           {/* Censor Certification */}
           <span className="bg-zinc-900/90 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] font-black text-zinc-300 border border-zinc-750 uppercase tracking-widest shadow-sm">
@@ -111,22 +114,24 @@ export function MoviePoster({
       )}
 
       {/* CENTER: Film Reel / Clapperboard SVG with Amber/Red Glow */}
-      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-2">
+      <div className="relative z-10 flex flex-col items-center justify-center my-auto py-1">
         <div className="relative flex items-center justify-center">
           {/* Ambient Glow Aura */}
-          <div className="absolute w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-rose-600/25 via-amber-500/20 to-transparent blur-xl pointer-events-none" />
+          <div className="absolute w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-rose-600/25 via-amber-500/20 to-transparent blur-xl pointer-events-none" />
 
           {/* Icon Plaque */}
-          <div className="relative p-3.5 sm:p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 shadow-xl backdrop-blur-md group-hover:scale-105 group-hover:border-zinc-700 transition-all duration-300">
+          <div className={`relative ${plaquePadding} bg-zinc-900/80 border border-zinc-800/90 shadow-xl backdrop-blur-md group-hover:scale-105 group-hover:border-zinc-700 transition-all duration-300`}>
             <Clapperboard className={`${iconSizeClasses} text-amber-400/90 drop-shadow-[0_0_12px_rgba(245,158,11,0.35)]`} />
           </div>
         </div>
 
         {/* Cinematic watermarking pill */}
-        <div className="mt-2.5 flex items-center gap-1 text-[9px] uppercase tracking-widest font-bold text-zinc-500/80">
-          <Film className="w-2.5 h-2.5 text-zinc-600" />
-          <span>Cinematic Release</span>
-        </div>
+        {size !== "sm" && (
+          <div className="mt-2.5 flex items-center gap-1 text-[9px] uppercase tracking-widest font-bold text-zinc-500/80">
+            <Film className="w-2.5 h-2.5 text-zinc-600" />
+            <span>Cinematic Release</span>
+          </div>
+        )}
       </div>
 
       {/* BOTTOM STRIP: Title & Format Chips */}
