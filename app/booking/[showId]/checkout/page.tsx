@@ -170,11 +170,11 @@ function CheckoutContent() {
     (m) => m.id === movieId || (showData?.movieTitle && m.title.toLowerCase() === showData.movieTitle.toLowerCase())
   );
 
-  const activeCinemaName = showData?.cinemaName || cinemaInfo.cinemaName;
-  const activeScreenName = showData?.screenName || cinemaInfo.screenName;
+  const activeCitySlug = paramCity || selectedCity.slug || showData?.citySlug || citySlug;
+  const activeCityName = (paramCity ? currentCity.name : null) || showData?.cityName || currentCity.name;
+  const activeCinemaName = (paramCity && showData?.citySlug && paramCity.toLowerCase() !== showData.citySlug.toLowerCase()) ? cinemaInfo.cinemaName : (showData?.cinemaName || cinemaInfo.cinemaName);
+  const activeScreenName = (paramCity && showData?.citySlug && paramCity.toLowerCase() !== showData.citySlug.toLowerCase()) ? cinemaInfo.screenName : (showData?.screenName || cinemaInfo.screenName);
   const activeScreenTier = showData?.screenTier || cinemaInfo.screenTier || "IMAX 3D Laser";
-  const activeCityName = showData?.cityName || currentCity.name;
-  const activeCitySlug = showData?.citySlug || citySlug;
   const candidateTitle =
     dbMovieTitle ||
     (showData?.movieTitle && showData.movieTitle !== "Feature Film" && showData.movieTitle !== "Movie" ? showData.movieTitle : null) ||

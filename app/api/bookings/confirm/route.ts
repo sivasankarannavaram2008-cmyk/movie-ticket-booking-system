@@ -124,11 +124,15 @@ export async function POST(req: NextRequest) {
             const rawCity = rCinema?.cities;
             const rCity = Array.isArray(rawCity) ? rawCity[0] : rawCity;
 
-            if (rMovie?.title && rMovie.title !== "Feature Film") {
-              if (movieId && isValidUUID(movieId) && rMovie.id !== movieId) {
-                // Show in DB belongs to a different movie than the user's explicit selection
-                targetShowId = "mismatch";
-              } else {
+            const userRequestedCity = (body.city || body.citySlug || "").toLowerCase();
+            const isMovieMismatch = movieId && isValidUUID(movieId) && rMovie?.id && rMovie.id !== movieId;
+            const isCityMismatch = userRequestedCity && rCity?.slug && rCity.slug.toLowerCase() !== userRequestedCity;
+
+            if (isMovieMismatch || isCityMismatch) {
+              // Show in DB belongs to a different movie or city than the user's explicit selection
+              targetShowId = "mismatch";
+            } else {
+              if (rMovie?.title && rMovie.title !== "Feature Film") {
                 finalMovieTitle = rMovie.title;
                 if (rMovie?.poster_url) finalPosterUrl = rMovie.poster_url;
                 if (rMovie?.backdrop_url) finalBackdropUrl = rMovie.backdrop_url;
@@ -224,30 +228,33 @@ export async function POST(req: NextRequest) {
               if (rScreen?.name) finalScreenName = rScreen.name;
               if (movieShowInCity.date) finalDate = movieShowInCity.date;
               if (movieShowInCity.start_time) finalTime = movieShowInCity.start_time.slice(0, 5);
-            } else {
-              const { data: anyMovieShow } = await supabaseAdmin
-                .from("shows")
-                .select("id, date, start_time")
-                .eq("movie_id", movieDbId)
-                .limit(1)
-                .maybeSingle();
-
-              if (anyMovieShow?.id) {
-                matchedShowId = anyMovieShow.id;
-              }
             }
           }
 
-          // 3. If no show found for this movie, provision one in an active screen
+          // 3. If no show found for this movie in targetCity, provision one strictly in targetCity!
           if (!matchedShowId) {
             const { data: targetScreen } = await supabaseAdmin
               .from("screens")
-              .select("id, name, cinemas!inner(name, cities!inner(name, slug))")
+              .select(`
+                id, name,
+                cinemas!inner (
+                  id, name, address,
+                  cities!inner ( id, name, slug )
+                )
+              `)
               .eq("cinemas.cities.slug", targetCity)
               .limit(1)
               .maybeSingle();
 
             if (targetScreen?.id) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const rCinema: any = (targetScreen as any)?.cinemas;
+              const rCity = rCinema?.cities;
+              if (rCinema?.name) {
+                finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
+              }
+              if (targetScreen?.name) finalScreenName = targetScreen.name;
+
               if (!movieDbId) {
                 const { data: createdMovie } = await supabaseAdmin
                   .from("movies")
@@ -270,8 +277,8 @@ export async function POST(req: NextRequest) {
                     screen_id: targetScreen.id,
                     movie_id: movieDbId,
                     date: finalDate,
-                    start_time: finalTime.length === 5 ? `${finalTime}:00` : "19:30:00",
-                    end_time: "22:30:00",
+                    start_time: finalTime.length === 5 ? `${finalTime}:00` : "21:00:00",
+                    end_time: "23:59:00",
                   })
                   .select("id")
                   .maybeSingle();
