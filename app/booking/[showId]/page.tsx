@@ -26,6 +26,10 @@ import { useCity } from "@/context/CityContext";
 import { supabase } from "@/lib/supabase";
 import { generateTicketQRCode } from "@/lib/qrcode/ticket-qr";
 
+function isValidUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+
 interface ShowMeta {
   showId: string;
   movieId: string;
@@ -170,10 +174,12 @@ function BookingContent() {
               const rawCinema = sScreen?.cinemas;
               const sCinema = Array.isArray(rawCinema) ? rawCinema[0] : rawCinema;
 
+              // Prioritize movie info from database
+              const dbMovieTitle = sMovie?.title && sMovie.title !== "Feature Film" ? sMovie.title : null;
               fetchedShow = {
                 id: dbShow.id,
-                movieId: sMovie?.id || matchedMovie?.id || movieIdParam || "m-1",
-                movieTitle: (sMovie?.title && sMovie.title !== "Feature Film" ? sMovie.title : null) || matchedMovie?.title || "Baahubali: The Beginning",
+                movieId: sMovie?.id || movieIdParam || "m-1",
+                movieTitle: dbMovieTitle || matchedMovie?.title || "Movie",
                 cinemaName: sCinema?.name || defaultCinema.cinemaName,
                 cinemaAddress: sCinema?.address || defaultCinema.cinemaAddress,
                 screenName: sScreen?.name || defaultCinema.screenName,
@@ -190,6 +196,37 @@ function BookingContent() {
           }
         }
 
+        // 3. Resolve explicit movie if movieIdParam was provided
+        let explicitMovieTitle: string | null = null;
+        let explicitMoviePoster: string | null = null;
+        let explicitMovieId = movieIdParam;
+
+        if (movieIdParam) {
+          const mockFound = MOCK_MOVIES.find(
+            (m) => m.id === movieIdParam || m.title.toLowerCase() === movieIdParam.toLowerCase()
+          );
+          if (mockFound) {
+            explicitMovieTitle = mockFound.title;
+            explicitMoviePoster = mockFound.poster_url ?? null;
+            explicitMovieId = mockFound.id;
+          } else if (isValidUUID(movieIdParam)) {
+            try {
+              const { data: dbM } = await supabase
+                .from("movies")
+                .select("id, title, poster_url")
+                .eq("id", movieIdParam)
+                .maybeSingle();
+              if (dbM) {
+                explicitMovieTitle = dbM.title;
+                explicitMoviePoster = dbM.poster_url ?? null;
+                explicitMovieId = dbM.id;
+              }
+            } catch (e) {
+              console.warn("Explicit movie lookup notice:", e);
+            }
+          }
+        }
+
         const fetchedTitle = fetchedShow?.movieTitle;
         const fetchedMovieId = fetchedShow?.movieId;
         const foundMovie =
@@ -199,10 +236,16 @@ function BookingContent() {
                    (movieIdParam && m.id === movieIdParam)
           );
 
-        const candidateTitle = fetchedTitle && fetchedTitle !== "Feature Film" && fetchedTitle !== "Movie" ? fetchedTitle : null;
-        const finalMovieTitle = candidateTitle || foundMovie?.title || matchedMovie?.title || "Baahubali: The Beginning";
-        const finalMovieId = fetchedMovieId || foundMovie?.id || movieIdParam || "m-1";
-        const finalPosterUrl = fetchedShow?.posterUrl || foundMovie?.poster_url || null;
+        const candidateTitle =
+          explicitMovieTitle ||
+          (fetchedTitle && fetchedTitle !== "Feature Film" && fetchedTitle !== "Movie" ? fetchedTitle : null) ||
+          foundMovie?.title ||
+          matchedMovie?.title ||
+          "Movie";
+
+        const finalMovieTitle = candidateTitle;
+        const finalMovieId = explicitMovieId || fetchedMovieId || foundMovie?.id || movieIdParam || "m-1";
+        const finalPosterUrl = explicitMoviePoster || fetchedShow?.posterUrl || foundMovie?.poster_url || null;
 
         const classicPrice = Number(fetchedShow?.classicPrice) || 220;
         const primePrice = Number(fetchedShow?.primePrice) || 350;

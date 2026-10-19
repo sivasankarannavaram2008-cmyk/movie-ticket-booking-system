@@ -23,6 +23,7 @@ import { MockPaymentModal } from "@/components/booking/MockPaymentModal";
 import { MOCK_MOVIES, CITIES, getDefaultCinemaForCity } from "@/lib/mock-data";
 import { useCity } from "@/context/CityContext";
 import { MoviePoster } from "@/components/MoviePoster";
+import { supabase } from "@/lib/supabase";
 
 interface FnBItem {
   id: string;
@@ -126,6 +127,27 @@ function CheckoutContent() {
     loadShow();
   }, [showId]);
 
+  // Query explicit movie from Supabase if movieId is a UUID
+  const [dbMovieTitle, setDbMovieTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadMovie() {
+      if (!movieId) return;
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(movieId);
+      if (isUUID) {
+        try {
+          const { data } = await supabase.from("movies").select("id, title").eq("id", movieId).maybeSingle();
+          if (data?.title) {
+            setDbMovieTitle(data.title);
+          }
+        } catch (e) {
+          console.warn("Error fetching movie in checkout:", e);
+        }
+      }
+    }
+    loadMovie();
+  }, [movieId]);
+
   // Sync if URL has explicit city param that differs from context
   useEffect(() => {
     if (paramCity && paramCity.toLowerCase() !== selectedCity.slug.toLowerCase()) {
@@ -153,8 +175,12 @@ function CheckoutContent() {
   const activeScreenTier = showData?.screenTier || cinemaInfo.screenTier || "IMAX 3D Laser";
   const activeCityName = showData?.cityName || currentCity.name;
   const activeCitySlug = showData?.citySlug || citySlug;
-  const candidateTitle = showData?.movieTitle && showData.movieTitle !== "Feature Film" && showData.movieTitle !== "Movie" ? showData.movieTitle : null;
-  const activeMovieTitle = candidateTitle || matchedMovie?.title || "Baahubali: The Beginning";
+  const candidateTitle =
+    dbMovieTitle ||
+    (showData?.movieTitle && showData.movieTitle !== "Feature Film" && showData.movieTitle !== "Movie" ? showData.movieTitle : null) ||
+    matchedMovie?.title ||
+    "Movie";
+  const activeMovieTitle = candidateTitle;
   const activeMovieId = movieId || matchedMovie?.id || "m-1";
   const activePosterUrl = null;
   const activeDate = showData?.date || new Date().toISOString().split("T")[0];
@@ -230,6 +256,7 @@ function CheckoutContent() {
     userEmail,
     userPhone,
     totalAmount: grandTotal,
+    movieId: activeMovieId,
     movieTitle: activeMovieTitle,
     cinemaName: activeCinemaName,
     screenName: activeScreenName,

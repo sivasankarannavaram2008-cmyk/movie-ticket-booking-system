@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
       bookingRef: customBookingRef,
       seatLabels = [],
       userId,
+      movieId,
       movieTitle = "Blockbuster Movie",
       cinemaName = "PVR INOX Palladium",
       screenName = "Audi 1 (IMAX)",
@@ -123,10 +124,17 @@ export async function POST(req: NextRequest) {
             const rawCity = rCinema?.cities;
             const rCity = Array.isArray(rawCity) ? rawCity[0] : rawCity;
 
-            if (rMovie?.title && rMovie.title !== "Feature Film") finalMovieTitle = rMovie.title;
-            if (rMovie?.poster_url) finalPosterUrl = rMovie.poster_url;
-            if (rMovie?.backdrop_url) finalBackdropUrl = rMovie.backdrop_url;
-            if (rMovie?.description) finalDescription = rMovie.description;
+            if (rMovie?.title && rMovie.title !== "Feature Film") {
+              if (movieId && isValidUUID(movieId) && rMovie.id !== movieId) {
+                // Show in DB belongs to a different movie than the user's explicit selection
+                targetShowId = "mismatch";
+              } else {
+                finalMovieTitle = rMovie.title;
+                if (rMovie?.poster_url) finalPosterUrl = rMovie.poster_url;
+                if (rMovie?.backdrop_url) finalBackdropUrl = rMovie.backdrop_url;
+                if (rMovie?.description) finalDescription = rMovie.description;
+              }
+            }
             if (rCinema?.name) {
               finalCinemaName = rCity?.name ? `${rCinema.name} (${rCity.name})` : rCinema.name;
             }
@@ -137,28 +145,49 @@ export async function POST(req: NextRequest) {
         } catch (queryErr) {
           console.warn("Could not query show relations:", queryErr);
         }
-      } else {
-        // If not a UUID, resolve movie and show strictly for the requested movie and city
+      }
+
+      if (!isValidUUID(targetShowId)) {
+        // Resolve movie and show strictly for the requested movie and city
         try {
           const targetCity = (body.city || body.citySlug || "hyderabad").toLowerCase();
-          const cleanedTitle = finalMovieTitle.replace(/[:(-].*$/, "").trim();
           let movieDbId: string | null = null;
 
-          // 1. Find matching movie in Supabase
-          const { data: matchedDbMovie } = await supabaseAdmin
-            .from("movies")
-            .select("id, title, poster_url, backdrop_url, description")
-            .or(`title.ilike.%${finalMovieTitle}%,title.ilike.%${cleanedTitle}%`)
-            .limit(1)
-            .maybeSingle();
+          // 1. Find matching movie in Supabase: by UUID first, then by title
+          if (movieId && isValidUUID(movieId)) {
+            const { data: directMovie } = await supabaseAdmin
+              .from("movies")
+              .select("id, title, poster_url, backdrop_url, description")
+              .eq("id", movieId)
+              .maybeSingle();
 
-          if (matchedDbMovie) {
-            movieDbId = matchedDbMovie.id;
-            finalMovieTitle = matchedDbMovie.title;
-            finalPosterUrl = matchedDbMovie.poster_url ?? null;
-            finalBackdropUrl = matchedDbMovie.backdrop_url ?? null;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            finalDescription = (matchedDbMovie as any).description ?? null;
+            if (directMovie) {
+              movieDbId = directMovie.id;
+              finalMovieTitle = directMovie.title;
+              finalPosterUrl = directMovie.poster_url ?? null;
+              finalBackdropUrl = directMovie.backdrop_url ?? null;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              finalDescription = (directMovie as any).description ?? null;
+            }
+          }
+
+          if (!movieDbId) {
+            const cleanedTitle = finalMovieTitle.replace(/[:(-].*$/, "").trim();
+            const { data: matchedDbMovie } = await supabaseAdmin
+              .from("movies")
+              .select("id, title, poster_url, backdrop_url, description")
+              .or(`title.ilike.%${finalMovieTitle}%,title.ilike.%${cleanedTitle}%`)
+              .limit(1)
+              .maybeSingle();
+
+            if (matchedDbMovie) {
+              movieDbId = matchedDbMovie.id;
+              finalMovieTitle = matchedDbMovie.title;
+              finalPosterUrl = matchedDbMovie.poster_url ?? null;
+              finalBackdropUrl = matchedDbMovie.backdrop_url ?? null;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              finalDescription = (matchedDbMovie as any).description ?? null;
+            }
           }
 
           // 2. Find a show specifically for this movie
@@ -253,14 +282,28 @@ export async function POST(req: NextRequest) {
 
           if (matchedShowId) {
             targetShowId = matchedShowId;
-          } else {
-            // As a fallback foreign key, retrieve an existing show UUID without overwriting finalMovieTitle
-            const { data: anyShow } = await supabaseAdmin
-              .from("shows")
+          } else if (movieDbId) {
+            // Provision in any screen rather than picking a show of a different movie
+            const { data: anyScreen } = await supabaseAdmin
+              .from("screens")
               .select("id")
               .limit(1)
               .maybeSingle();
-            if (anyShow?.id) targetShowId = anyShow.id;
+
+            if (anyScreen?.id) {
+              const { data: provisionedShow } = await supabaseAdmin
+                .from("shows")
+                .insert({
+                  screen_id: anyScreen.id,
+                  movie_id: movieDbId,
+                  date: finalDate,
+                  start_time: finalTime.length === 5 ? `${finalTime}:00` : "19:30:00",
+                  end_time: "22:30:00",
+                })
+                .select("id")
+                .maybeSingle();
+              if (provisionedShow?.id) targetShowId = provisionedShow.id;
+            }
           }
         } catch (err) {
           console.warn("Could not query movie-specific show UUID:", err);
@@ -616,10 +659,25 @@ export async function GET(req: NextRequest) {
             (Array.isArray(sShow?.movies) ? sShow.movies[0]?.title : null) ||
             bookingRecord?.movie_title;
 
-          const movieTitle =
+          let movieTitle =
             candidateTitle && candidateTitle !== "Feature Film" && candidateTitle !== "Movie"
               ? candidateTitle
-              : "Baahubali: The Beginning";
+              : (candidateTitle || "Movie");
+
+          if ((!movieTitle || movieTitle === "Movie") && sShow?.movie_id) {
+            try {
+              const { data: directM } = await supabaseAdmin
+                .from("movies")
+                .select("title")
+                .eq("id", sShow.movie_id)
+                .maybeSingle();
+              if (directM?.title && directM.title !== "Feature Film") {
+                movieTitle = directM.title;
+              }
+            } catch (e) {
+              console.warn("Direct movie title lookup notice:", e);
+            }
+          }
 
           const ticket: InMemTicket = {
             bookingId: bookingRecord.id,

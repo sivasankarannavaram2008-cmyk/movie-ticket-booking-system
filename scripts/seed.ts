@@ -743,8 +743,8 @@ async function seed() {
       const { data: updated, error: updErr } = await supabase
         .from("movies")
         .update({
-          poster_url: m.poster_url,
-          backdrop_url: m.backdrop_url,
+          poster_url: null,
+          backdrop_url: null,
           genre: m.genre,
           duration_min: m.duration_min,
           release_date: m.release_date,
@@ -763,8 +763,8 @@ async function seed() {
         .from("movies")
         .insert({
           title: m.title,
-          poster_url: m.poster_url,
-          backdrop_url: m.backdrop_url,
+          poster_url: null,
+          backdrop_url: null,
           genre: m.genre,
           duration_min: m.duration_min,
           release_date: m.release_date,
@@ -779,6 +779,9 @@ async function seed() {
     }
   }
 
+  // Update any stray "Feature Film" movie to "K.G.F: Chapter 1"
+  await supabase.from("movies").update({ title: "K.G.F: Chapter 1" }).eq("title", "Feature Film");
+
   console.log(`   ✅ Synced Telugu Movie Catalog (${activeMovies.length} titles):`);
   activeMovies.forEach((m) => console.log(`      - ${m.title}`));
 
@@ -787,6 +790,7 @@ async function seed() {
   const { data: allDbMovies } = await supabase.from("movies").select("id, title");
   if (allDbMovies && allDbMovies.length > 0) {
     for (const m of allDbMovies) {
+      if (m.title === "Feature Film") continue;
       if (!activeMovies.some((am) => am.id === m.id)) {
         activeMovies.push({ id: m.id, title: m.title });
       }
@@ -885,7 +889,7 @@ async function seed() {
   console.log("\n🎟️  [5/5] Uniform Movie Scheduling Across All Cities (4 Shows/Day x 3 Days)...");
 
   const today = new Date();
-  const days = [0, 1, 2].map((offset) => {
+  const days = [0, 1, 2, 3, 4, 5, 6].map((offset) => {
     const d = new Date(today);
     d.setDate(today.getDate() + offset);
     return formatDate(d);

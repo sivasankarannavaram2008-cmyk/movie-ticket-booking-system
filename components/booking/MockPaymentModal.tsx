@@ -29,6 +29,7 @@ interface MockPaymentModalProps {
     userEmail: string;
     userPhone: string;
     totalAmount: number;
+    movieId?: string;
     movieTitle: string;
     cinemaName: string;
     screenName: string;
@@ -105,6 +106,7 @@ export function MockPaymentModal({
         bookingRef: generatedRef,
         seatLabels: bookingPayload.seatLabels,
         userId: bookingPayload.userId,
+        movieId: bookingPayload.movieId,
         movieTitle: bookingPayload.movieTitle,
         cinemaName: bookingPayload.cinemaName,
         screenName: bookingPayload.screenName,

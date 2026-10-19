@@ -121,7 +121,7 @@ function TicketContent() {
                 }
               }
 
-              movieTitle = movieTitle && movieTitle !== "Feature Film" ? movieTitle : "Baahubali: The Beginning";
+              movieTitle = movieTitle && movieTitle !== "Feature Film" ? movieTitle : "Movie";
 
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const rawBookingSeats: any[] = booking.booking_seats || [];
@@ -180,8 +180,8 @@ function TicketContent() {
           const data = await res.json();
           if (data.ticket) {
             const apiTicket = data.ticket;
-            if (!apiTicket.movieTitle || apiTicket.movieTitle === "Feature Film" || apiTicket.movieTitle === "Movie") {
-              apiTicket.movieTitle = "Baahubali: The Beginning";
+            if (!apiTicket.movieTitle || apiTicket.movieTitle === "Feature Film") {
+              apiTicket.movieTitle = "Movie";
             }
             setTicket(apiTicket);
             const qr = await generateTicketQRCode(apiTicket.qrData || apiTicket.referenceHash);
