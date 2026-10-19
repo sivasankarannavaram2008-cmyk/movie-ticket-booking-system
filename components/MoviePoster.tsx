@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Film, Clapperboard, Sparkles, Star, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface MoviePosterProps {
   title: string;
@@ -44,7 +45,7 @@ export function MoviePoster({
   // If a valid image URL exists, render image with automatic fallback
   if (hasValidImage) {
     return (
-      <div className={`relative ${aspectRatio} w-full overflow-hidden rounded-2xl bg-zinc-950 ${className}`}>
+      <div className={cn("relative overflow-hidden rounded-2xl bg-zinc-950", aspectRatio, "w-full", className)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={poster_url!}
@@ -79,7 +80,13 @@ export function MoviePoster({
 
   return (
     <div
-      className={`relative ${aspectRatio} w-full overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-zinc-800/90 shadow-2xl flex flex-col justify-between ${containerPadding} select-none transition-all duration-300 hover:border-zinc-700 hover:shadow-primary/10 ${className}`}
+      className={cn(
+        "relative overflow-hidden rounded-2xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-zinc-800/90 shadow-2xl flex flex-col justify-between select-none transition-all duration-300 hover:border-zinc-700 hover:shadow-primary/10",
+        aspectRatio,
+        "w-full",
+        containerPadding,
+        className
+      )}
     >
       {/* Ambient Radial Glowing Meshes */}
       <div className="absolute -top-12 -right-12 w-36 h-36 bg-gradient-to-br from-rose-600/20 to-amber-500/10 rounded-full blur-3xl pointer-events-none" />

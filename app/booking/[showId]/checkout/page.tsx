@@ -290,24 +290,28 @@ function CheckoutContent() {
           {/* LEFT COLUMN: Show Info, Contact Details, F&B Add-ons */}
           <div className="lg:col-span-7 space-y-6">
             {/* Movie & Show Info Card */}
-            <div className="rounded-2xl border border-zinc-850 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-4">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-4">
               <div className="flex gap-4 items-center">
-                <MoviePoster
-                  title={activeMovieTitle}
-                  poster_url={activePosterUrl}
-                  size="sm"
-                  className="w-16 h-24 shrink-0 rounded-xl"
-                  showBottomDetails={false}
-                />
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
+                <div className="w-16 h-24 shrink-0 rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800 shadow-md">
+                  <MoviePoster
+                    title={activeMovieTitle}
+                    poster_url={activePosterUrl}
+                    size="sm"
+                    className="w-full h-full"
+                    showBottomDetails={false}
+                  />
+                </div>
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <span className="inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30">
                     {activeScreenTier}
                   </span>
-                  <h2 className="text-lg font-black text-white">{activeMovieTitle}</h2>
-                  <p className="text-xs text-zinc-400">
+                  <h2 className="text-lg font-black text-white leading-snug line-clamp-2">
+                    {activeMovieTitle}
+                  </h2>
+                  <p className="text-xs text-zinc-400 truncate">
                     {activeCinemaName} • {activeScreenName} ({activeCityName})
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-zinc-300 pt-0.5">
+                  <div className="flex items-center gap-2 text-xs text-zinc-300 pt-0.5 flex-wrap">
                     <span className="font-semibold text-white">Seats:</span>
                     <span className="text-primary font-bold">
                       {selectedSeatLabels.join(", ")}
@@ -320,7 +324,7 @@ function CheckoutContent() {
             </div>
 
             {/* Contact Details Form */}
-            <div className="rounded-2xl border border-zinc-850 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-3.5">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-3.5">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white">
                 Share Ticket To
               </h3>
@@ -356,7 +360,7 @@ function CheckoutContent() {
             </div>
 
             {/* F&B Add-ons */}
-            <div className="rounded-2xl border border-zinc-850 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-4">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 backdrop-blur-sm space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Utensils className="w-4 h-4 text-primary" />
@@ -393,7 +397,7 @@ function CheckoutContent() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-1 border-t border-zinc-850">
+                      <div className="flex items-center justify-between pt-1 border-t border-zinc-800">
                         <span className="text-xs font-black text-white">₹{item.price}</span>
 
                         {isSelected ? (
@@ -434,7 +438,7 @@ function CheckoutContent() {
           {/* RIGHT COLUMN: Price Breakdown Order Summary */}
           <div className="lg:col-span-5 sticky top-28">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-6">
-              <div className="flex items-center justify-between border-b border-zinc-850 pb-4">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <Ticket className="w-4 h-4 text-primary" />
                   Order Summary
